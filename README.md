@@ -344,7 +344,7 @@ graph LR
 
 ```mermaid
 flowchart LR
-    subgraph Backend Start["启动后端"]
+    subgraph BackendStart["启动后端"]
         B1["cd backend"]
         B2["python -m venv venv<br/>&& source venv/bin/activate"]
         B3["pip install -r requirements.txt"]
@@ -352,18 +352,18 @@ flowchart LR
         B1 --> B2 --> B3 --> B4
     end
 
-    subgraph Frontend Start["启动前端"]
+    subgraph FrontendStart["启动前端"]
         F1["cd frontend"]
         F2["npm install"]
         F3["npm run dev"]
         F1 --> F2 --> F3
     end
 
-    Backend Start -->|"http://localhost:8000/docs"| API["API 文档"]
-    Frontend Start -->|"http://localhost:5173"| Web["Web 界面"]
+    BackendStart -->|"http://localhost:8000/docs"| API["API 文档"]
+    FrontendStart -->|"http://localhost:5173"| Web["Web 界面"]
 
-    style Backend Start fill:#e8f8f0,stroke:#06d6a0,stroke-width:2px
-    style Frontend Start fill:#e8f4fd,stroke:#00b4d8,stroke-width:2px
+    style BackendStart fill:#e8f8f0,stroke:#06d6a0,stroke-width:2px
+    style FrontendStart fill:#e8f4fd,stroke:#00b4d8,stroke-width:2px
     style API fill:#fff4e8,stroke:#ff6b35,stroke-width:2px
     style Web fill:#fff4e8,stroke:#ff6b35,stroke-width:2px
 ```

@@ -1,0 +1,19 @@
+.footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  background: #fff;
+}
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.footer .dot {
+  color: #d1d5db;
+}

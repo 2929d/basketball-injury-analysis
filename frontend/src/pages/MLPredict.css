@@ -1,0 +1,246 @@
+.ml-predict-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+.ml-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+.ml-intro {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
+  line-height: 1.7;
+}
+.ml-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.ml-input-card {
+  padding: 20px;
+}
+.ml-input-card h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1f2937;
+}
+.ml-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ml-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ml-field label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #374151;
+}
+.ml-field input {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ml-field input:focus {
+  outline: none;
+  border-color: #7c5cff;
+}
+.ml-hint {
+  font-size: 11px;
+  color: #9ca3af;
+}
+.ml-predict-btn {
+  width: 100%;
+  margin-top: 16px;
+}
+.ml-result-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ml-placeholder {
+  padding: 60px 20px;
+  text-align: center;
+  color: #9ca3af;
+}
+.ml-result-card {
+  padding: 20px 24px;
+}
+.ml-prob-display {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.ml-prob-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+.ml-prob-value {
+  font-size: 36px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ml-risk-level {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 5px;
+}
+.ml-model-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+.ml-label-def {
+  font-size: 11.5px;
+  color: #9ca3af;
+}
+.ml-contrib-card {
+  padding: 20px 24px;
+}
+.ml-contrib-card h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.ml-contrib-intro {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 14px;
+}
+.ml-contrib-item {
+  margin-bottom: 14px;
+}
+.ml-contrib-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.ml-contrib-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+}
+.ml-contrib-dir {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ml-contrib-dir.up {
+  color: #dc2626;
+}
+.ml-contrib-dir.down {
+  color: #059669;
+}
+.ml-contrib-bar-wrap {
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ml-contrib-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+.ml-contrib-meta {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 3px;
+}
+.ml-honesty-note {
+  font-size: 12px;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  padding: 10px 14px;
+  line-height: 1.6;
+}
+
+/* ===== 大白话版新增样式 ===== */
+.ml-acc-badge {
+  display: inline-block;
+  background: #7c5cff;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+.ml-acc-note {
+  font-size: 12px;
+  color: #9ca3af;
+}
+.ml-presets {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ml-presets-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+.ml-preset-btn {
+  font-size: 12.5px;
+  padding: 5px 12px;
+}
+.ml-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ml-input-row input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.ml-input-row input:focus {
+  outline: none;
+  border-color: #7c5cff;
+}
+.ml-example {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+.ml-risk-plain {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+.ml-contrib-explain {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.ml-placeholder-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 8px;
+}

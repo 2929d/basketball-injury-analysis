@@ -1,0 +1,37 @@
+{
+  "model_type": "logistic_regression_numpy",
+  "data_source": "NBA 2025-26赛季伤病数据(19827条)",
+  "feature_count": 10,
+  "sample_count": 450,
+  "label": "后半赛季Out天数>10天=高风险(1)",
+  "label_distribution": {
+    "high_risk": 225,
+    "low_risk": 225
+  },
+  "cross_validation": "5-fold",
+  "metrics": {
+    "accuracy": 0.6111,
+    "precision": 0.6299,
+    "recall": 0.5714,
+    "f1": 0.5892,
+    "tp": 25.2,
+    "fp": 15.2,
+    "fn": 19.8,
+    "tn": 29.8,
+    "avg_prediction": 0.4992
+  },
+  "paper_baseline": 0.7668,
+  "feature_importance": {
+    "前半赛季Out次数": 22.6,
+    "前半赛季伤病总次数": 21.47,
+    "前半赛季伤病天数跨度": 18.44,
+    "前半赛季Out占比": 14.99,
+    "前半赛季同部位复发次数": 14.03,
+    "前半赛季Questionable次数": 5.17,
+    "前半赛季不同伤病类型数": 3.3,
+    "前半赛季膝伤次数": 0.0,
+    "前半赛季踝伤次数": 0.0,
+    "前半赛季背伤次数": 0.0
+  },
+  "honesty_note": "本模型用numpy实现逻辑回归(非LightGBM), 特征来自伤病历史(非体测数据)"
+}

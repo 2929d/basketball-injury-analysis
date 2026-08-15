@@ -1,0 +1,1026 @@
+.report-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+.loading-box {
+  text-align: center;
+}
+.loading-box p {
+  margin-top: 16px;
+  color: var(--text-sub);
+}
+
+.report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.report-head-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== 综合评分卡片 ===== */
+.overview-card {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding: 32px 36px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbfe 100%);
+}
+.overview-ring {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+.overview-ring-svg {
+  width: 100%;
+  height: 100%;
+}
+.overview-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.overview-ring-center strong {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+}
+.overview-ring-center span {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.overview-meta {
+  flex: 1;
+}
+.overview-level {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.level-label {
+  font-size: 14px;
+  color: var(--text-sub);
+}
+.level-tag {
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.overview-prob {
+  margin-bottom: 16px;
+}
+.prob-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 6px;
+}
+.prob-label strong {
+  color: var(--text-main);
+  font-size: 17px;
+  font-weight: 700;
+}
+.prob-bar {
+  height: 8px;
+  background: var(--bg-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.prob-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1s ease;
+}
+.overview-summary {
+  font-size: 13.5px;
+  color: var(--text-sub);
+  line-height: 1.7;
+  padding: 12px 16px;
+  background: rgba(0, 180, 216, 0.05);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-primary);
+}
+
+.report-main-grid {
+  margin-bottom: 24px;
+}
+.empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+  font-size: 14px;
+}
+.video-wrap {
+  text-align: center;
+}
+.video-wrap video {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: #000;
+  max-height: 360px;
+}
+.video-tip {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ===== 报告分块 ===== */
+.report-block {
+  margin-bottom: 28px;
+}
+
+/* ===== 风险详情卡 ===== */
+.risk-item {
+  padding: 22px 24px;
+}
+.risk-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.risk-cat {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.risk-score-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.risk-score-num {
+  font-size: 26px;
+  font-weight: 800;
+  min-width: 60px;
+}
+.risk-score-num small {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.risk-score-bar .progress-track {
+  flex: 1;
+  height: 8px;
+}
+.risk-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.risk-col h5 {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.risk-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.risk-col li {
+  position: relative;
+  padding: 4px 0 4px 14px;
+  font-size: 12.5px;
+  color: var(--text-main);
+  line-height: 1.55;
+}
+.risk-col li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+/* ===== 生物力学特征卡 ===== */
+.feature-metric-card {
+  padding: 18px 20px;
+}
+.fmc-head {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid currentColor;
+  display: inline-block;
+}
+.fmc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.fmc-list li {
+  padding: 7px 0;
+  font-size: 13px;
+  border-bottom: 1px dashed var(--border-color);
+}
+.fmc-list li:last-child {
+  border-bottom: none;
+}
+.fmc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.fmc-k {
+  color: var(--text-sub);
+}
+.fmc-v {
+  color: var(--text-main);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fmc-tip {
+  font-size: 11.5px;
+  color: #9ca3af;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.overall-features {
+  padding: 20px 24px;
+}
+.overall-metrics {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14px;
+}
+.overall-metric {
+  text-align: center;
+  padding: 12px 8px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+}
+.overall-metric span {
+  display: block;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+.overall-metric strong {
+  font-size: 15px;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 1024px) {
+  .overall-metrics {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .overview-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 24px;
+    padding: 28px 20px;
+  }
+  .overview-level {
+    justify-content: center;
+  }
+  .risk-cols {
+    grid-template-columns: 1fr;
+  }
+  .overall-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== 时间轴 ===== */
+.phase-tl {
+  padding: 8px 0 4px;
+}
+.phase-track {
+  position: relative;
+  height: 38px;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+}
+.phase-seg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  min-width: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.phase-labels {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.phase-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.phase-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.phase-label strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-main);
+}
+.phase-label small {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 底部 ===== */
+.report-foot {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 36px;
+  padding-bottom: 20px;
+}
+
+/* ===== 训练动作 ===== */
+.risk-exercises {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #e5e9f0;
+}
+.risk-exercises h5 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #00b4d8;
+}
+.ex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ex-card {
+  background: #f8fafc;
+  border: 1px solid #e8edf3;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.ex-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.ex-head strong {
+  font-size: 14px;
+  color: #1f2937;
+}
+.ex-dose {
+  font-size: 12px;
+  color: #06d6a0;
+  background: rgba(6, 214, 160, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.ex-steps {
+  font-size: 12.5px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.ex-video {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  color: #ff6b35;
+  text-decoration: none;
+  font-weight: 500;
+}
+.ex-video:hover {
+  text-decoration: underline;
+}
+
+/* ===== 装备推荐(护具&球鞋) ===== */
+.gear-card {
+  padding: 18px 20px;
+}
+.gear-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef2f7;
+}
+.gear-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gear-item {
+  background: #f8fafc;
+  border: 1px solid #e8edf3;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.gear-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+.gear-item-head strong {
+  font-size: 14px;
+  color: #1f2937;
+}
+.gear-scene {
+  font-size: 11.5px;
+  color: #7c5cff;
+  background: rgba(124, 92, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.gear-desc {
+  font-size: 12.5px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 4px;
+}
+.gear-reason {
+  font-size: 12px;
+  color: #ff6b35;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 球鞋具体款式 */
+.shoe-models {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #e5e9f0;
+}
+.shoe-models-title {
+  font-size: 11.5px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+.shoe-model {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 0;
+  font-size: 12.5px;
+  border-bottom: 1px solid #f3f5f9;
+}
+.shoe-model:last-child {
+  border-bottom: none;
+}
+.shoe-brand {
+  font-size: 11px;
+  color: #fff;
+  background: #00b4d8;
+  padding: 1px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.shoe-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+.shoe-highlight {
+  color: #6b7280;
+  font-size: 12px;
+  flex-basis: 100%;
+  padding-left: 0;
+}
+
+/* ===== 问题动作回放 ===== */
+.block-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 14px;
+}
+.problem-clip-card {
+  padding: 14px 16px;
+}
+.problem-clip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.problem-issue-tag {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+  background: #ff6b35;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+.problem-time {
+  font-size: 12px;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}
+.problem-clip-card video {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+  max-height: 240px;
+}
+.problem-desc {
+  font-size: 12.5px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+/* ===== 运动员档案 & 个体因素影响 ===== */
+.athlete-profile-card {
+  padding: 18px 20px;
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+.profile-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid #f3f5f9;
+  font-size: 13px;
+}
+.profile-item span {
+  color: #9ca3af;
+}
+.profile-item strong {
+  color: #1f2937;
+  font-weight: 500;
+}
+.no-adj {
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 20px 0;
+}
+.adj-category {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #e8edf3;
+}
+.adj-category:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.adj-cat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.adj-cat-head strong {
+  font-size: 13px;
+  color: #1f2937;
+}
+.adj-score-change {
+  font-size: 12px;
+  color: #7c5cff;
+  font-variant-numeric: tabular-nums;
+  background: rgba(124, 92, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+.adj-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.adj-factor {
+  color: #4b5563;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.adj-delta {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.adj-up {
+  color: #e24b4a;
+  background: rgba(226, 75, 74, 0.1);
+}
+.adj-down {
+  color: #1d9e75;
+  background: rgba(29, 158, 117, 0.1);
+}
+.adj-reason {
+  color: #9ca3af;
+  flex: 1;
+}
+
+/* ===== 大白话总结 ===== */
+.plain-summary-card {
+  padding: 20px 22px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+}
+.plain-summary-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #7c5cff;
+}
+.plain-summary-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.plain-para {
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.7;
+  margin: 0;
+}
+.plain-para-head {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7c5cff;
+  margin-right: 8px;
+}
+.plain-para span {
+  white-space: pre-line;
+}
+
+/* ===== 个性化训练计划 ===== */
+.training-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.training-day-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.training-day-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid #7c5cff;
+}
+.training-day-head strong {
+  font-size: 14px;
+  color: #1f2937;
+}
+.training-focus {
+  font-size: 11px;
+  color: #7c5cff;
+  background: rgba(124, 92, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+.training-exercises {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.training-ex {
+  padding: 6px 0;
+  border-bottom: 1px dashed #e8edf3;
+}
+.training-ex:last-child {
+  border-bottom: none;
+}
+.ex-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1f2937;
+}
+.ex-dose {
+  font-size: 11px;
+  color: #7c5cff;
+  font-weight: 400;
+  margin-left: 4px;
+}
+.ex-purpose {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* ===== 逐帧分析特征显示 ===== */
+.frame-info {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.frame-info-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c5cff;
+  margin-bottom: 8px;
+}
+.frame-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.frame-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #eef2f7;
+}
+.fm-label {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 2px;
+}
+.fm-value {
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 动作要领大白话 ===== */
+.action-guide-card {
+  padding: 20px 22px;
+  background: linear-gradient(135deg, #fef3f2 0%, #fff7ed 100%);
+  border: 1px solid #fed7aa;
+}
+.action-guide-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #c2410c;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f97316;
+}
+.action-guide-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.guide-para {
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.7;
+  margin: 0;
+}
+.guide-para-head {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ea580c;
+  margin-right: 8px;
+}
+.guide-para span {
+  white-space: pre-line;
+}
+
+/* ===== 动作有效性提示 ===== */
+.action-validity-card {
+  padding: 16px 20px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+}
+.validity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.validity-score {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.validity-ok {
+  color: #059669;
+  font-weight: 600;
+}
+.validity-warn {
+  color: #dc2626;
+  font-weight: 600;
+}
+.validity-msg {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.7;
+  margin-bottom: 4px;
+}
+.validity-tip {
+  font-size: 12px;
+  color: #92400e;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #fcd34d;
+}
+
+/* ===== 数据可信度说明 ===== */
+.credibility-card {
+  padding: 14px 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #7c5cff;
+}
+.credibility-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c5cff;
+  margin-bottom: 8px;
+}
+.credibility-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.credibility-body span {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* ===== 学术依据 ===== */
+.evidence-card {
+  padding: 18px 22px;
+  background: #fafbff;
+  border: 1px solid #e0e7ff;
+}
+.evidence-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #4f46e5;
+  margin-bottom: 4px;
+}
+.evidence-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 14px;
+}
+.evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.evidence-table th {
+  background: #4f46e5;
+  color: #fff;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 500;
+}
+.evidence-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #e0e7ff;
+  color: #374151;
+  line-height: 1.5;
+}
+.evidence-table tbody tr:hover {
+  background: #f5f7ff;
+}
+.evidence-table td:first-child {
+  font-weight: 500;
+  color: #1f2937;
+}
+.evidence-disclaimer {
+  font-size: 12px;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 10px 0 14px;
+  line-height: 1.6;
+}
+.evidence-disclaimer strong {
+  color: #78350f;
+}
+.evidence-refs-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4f46e5;
+  margin: 10px 0 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #d1d5db;
+}
+.evidence-refs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ref-item {
+  display: flex;
+  gap: 6px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+.ref-num {
+  color: #4f46e5;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.ref-text {
+  flex: 1;
+}
+.ref-text em {
+  color: #6b7280;
+}
+
+/* ===== 打印/PDF导出 ===== */
+@media print {
+  .navbar, .footer, .no-print, .report-head-actions, .report-foot {
+    display: none !important;
+  }
+  .layout-main {
+    padding: 0 !important;
+  }
+  .page {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .report-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 12px !important;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .plain-summary-card {
+    background: #fff !important;
+    border: 2px solid #7c5cff !important;
+  }
+  .problem-clip-card video {
+    display: none;
+  }
+  .problem-clip-card .problem-clip-head::after {
+    content: "（视频见在线报告）";
+    color: #999;
+    font-size: 11px;
+  }
+}

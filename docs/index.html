@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运动损伤风险评估系统 - 操作演示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0a0e1a;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+  #app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  .screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    transform: scale(1.05);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    pointer-events: none;
+  }
+  .screen.active {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* ===== Progress bar ===== */
+  #progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 0%;
+    height: 4px;
+    background: linear-gradient(90deg, #00d4ff, #0099ff);
+    z-index: 999;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 12px rgba(0,212,255,0.6);
+  }
+  #step-indicator {
+    position: fixed;
+    top: 20px; right: 24px;
+    z-index: 999;
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  #step-indicator span { color: #00d4ff; }
+
+  /* ===== Screen 1: Home ===== */
+  #s1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #142244 0%, #0a0e1a 100%);
+  }
+  #s1::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,100,255,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
+    50% { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+  }
+  .home-icon {
+    font-size: 72px;
+    margin-bottom: 24px;
+    filter: drop-shadow(0 0 20px rgba(0,212,255,0.4));
+    position: relative;
+    z-index: 1;
+  }
+  .home-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+    position: relative; z-index: 1;
+    text-shadow: 0 0 30px rgba(0,150,255,0.3);
+  }
+  .home-subtitle {
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 48px;
+    letter-spacing: 2px;
+    position: relative; z-index: 1;
+  }
+  .home-btn {
+    background: linear-gradient(135deg, #0099ff, #00d4ff);
+    color: #fff;
+    padding: 16px 56px;
+    border-radius: 30px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    box-shadow: 0 8px 32px rgba(0,150,255,0.4);
+    position: relative; z-index: 1;
+    animation: btnGlow 2s ease-in-out infinite;
+  }
+  @keyframes btnGlow {
+    0%,100% { box-shadow: 0 8px 32px rgba(0,150,255,0.4); transform: translateY(0); }
+    50% { box-shadow: 0 12px 48px rgba(0,212,255,0.6); transform: translateY(-3px); }
+  }
+
+  /* ===== Screen 2: Athlete Form ===== */
+  #s2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #0f1525, #0a0e1a);
+  }
+  .form-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 40px 48px;
+    width: 520px;
+    backdrop-filter: blur(20px);
+  }
+  .form-title {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-field {
+    flex: 1;
+  }
+  .form-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .form-input {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 16px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .form-input .fill-text {
+    position: absolute;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 0;
+    transition: width 0.6s ease;
+  }
+  .form-input.filled .fill-text {
+    width: 100%;
+  }
+  .form-btn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    text-align: center;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    margin-top: 12px;
+    letter-spacing: 2px;
+  }
+
+  /* ===== Screen 3: Upload ===== */
+  #s3 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #0f1525, #0a0e1a);
+  }
+  .upload-title {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 32px;
+  }
+  .drop-zone {
+    width: 480px;
+    height: 240px;
+    border: 2px dashed rgba(0,212,255,0.4);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,100,255,0.05);
+    margin-bottom: 28px;
+    transition: border-color 0.5s;
+  }
+  .drop-zone.dragover {
+    border-color: #00d4ff;
+    background: rgba(0,212,255,0.12);
+  }
+  .drop-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+  }
+  .drop-text {
+    color: rgba(255,255,255,0.6);
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .drop-hint {
+    color: rgba(255,255,255,0.3);
+    font-size: 14px;
+  }
+  .action-tags {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .action-tag {
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.04);
+    transition: all 0.3s;
+  }
+  .action-tag.selected {
+    background: linear-gradient(135deg, #0099ff, #00d4ff);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(0,150,255,0.3);
+  }
+  .upload-btn {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    padding: 14px 48px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 2px;
+    box-shadow: 0 6px 24px rgba(249,115,22,0.3);
+  }
+
+  /* ===== Screen 4: Analysis Progress ===== */
+  #s4 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #0f1525, #0a0e1a);
+  }
+  .analysis-title {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 40px;
+  }
+  .progress-ring {
+    width: 160px; height: 160px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .progress-ring svg {
+    transform: rotate(-90deg);
+  }
+  .progress-ring .ring-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.1);
+    stroke-width: 8;
+  }
+  .progress-ring .ring-fg {
+    fill: none;
+    stroke: url(#ringGrad);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 440;
+    stroke-dashoffset: 440;
+    transition: stroke-dashoffset 0.3s;
+  }
+  .progress-ring .pct {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    color: #00d4ff;
+    font-size: 36px;
+    font-weight: 800;
+  }
+  .stages {
+    display: flex;
+    gap: 32px;
+  }
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .stage-circle {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: rgba(255,255,255,0.3);
+    transition: all 0.4s;
+  }
+  .stage.done .stage-circle {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #fff;
+  }
+  .stage.active .stage-circle {
+    border-color: #00d4ff;
+    color: #00d4ff;
+    box-shadow: 0 0 16px rgba(0,212,255,0.4);
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stage-label {
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+  }
+  .stage.done .stage-label, .stage.active .stage-label {
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ===== Screen 5: Report ===== */
+  #s5 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #0f1525, #0a0e1a);
+    padding: 40px;
+  }
+  .report-title {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+  .report-grid {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+  }
+  .radar-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .radar-label {
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .risk-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .risk-card {
+    padding: 16px 24px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 280px;
+  }
+  .risk-card.low {
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.3);
+  }
+  .risk-card.high {
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+  }
+  .risk-card.mid {
+    background: rgba(245,158,11,0.12);
+    border: 1px solid rgba(245,158,11,0.3);
+  }
+  .risk-icon {
+    font-size: 28px;
+  }
+  .risk-info { flex: 1; }
+  .risk-name {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .risk-level {
+    font-size: 13px;
+  }
+  .risk-card.low .risk-level { color: #4ade80; }
+  .risk-card.high .risk-level { color: #f87171; }
+  .risk-card.mid .risk-level { color: #fbbf24; }
+  .risk-score {
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .risk-card.low .risk-score { color: #4ade80; }
+  .risk-card.high .risk-score { color: #f87171; }
+  .risk-card.mid .risk-score { color: #fbbf24; }
+
+  .skeleton-demo {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .skeleton-frame {
+    width: 120px; height: 90px;
+    background: #0d1117;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-figure {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+  }
+  .skeleton-figure svg line {
+    stroke: #00d4ff;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .skeleton-figure svg circle {
+    fill: #00d4ff;
+  }
+  .skeleton-info {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+  }
+  .skeleton-info b { color: #00d4ff; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SVG gradient defs -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00d4ff"/>
+        <stop offset="100%" stop-color="#0099ff"/>
+      </linearGradient>
+      <radialGradient id="radarFill">
+        <stop offset="0%" stop-color="rgba(0,212,255,0.25)"/>
+        <stop offset="100%" stop-color="rgba(0,212,255,0.05)"/>
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <div id="step-indicator">步骤 <span id="cur-step">1</span> / 5</div>
+  <div id="progress-bar"></div>
+
+  <!-- ===== Screen 1: Home ===== -->
+  <div class="screen active" id="s1">
+    <div class="home-icon">🏀</div>
+    <div class="home-title">运动损伤风险评估系统</div>
+    <div class="home-subtitle">Basketball Injury Risk Assessment</div>
+    <div class="home-btn">开始评估</div>
+  </div>
+
+  <!-- ===== Screen 2: Athlete Form ===== -->
+  <div class="screen" id="s2">
+    <div class="form-card">
+      <div class="form-title">运动员信息录入</div>
+      <div class="form-row">
+        <div class="form-field">
+          <span class="form-label">姓名</span>
+          <div class="form-input" data-fill="张伟"><span class="fill-text">张伟</span></div>
+        </div>
+        <div class="form-field">
+          <span class="form-label">年龄</span>
+          <div class="form-input" data-fill="22岁"><span class="fill-text">22 岁</span></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <span class="form-label">身高 (cm)</span>
+          <div class="form-input" data-fill="188"><span class="fill-text">188</span></div>
+        </div>
+        <div class="form-field">
+          <span class="form-label">体重 (kg)</span>
+          <div class="form-input" data-fill="82"><span class="fill-text">82</span></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <span class="form-label">运动项目</span>
+          <div class="form-input" data-fill="篮球"><span class="fill-text">篮球</span></div>
+        </div>
+        <div class="form-field">
+          <span class="form-label">竞技水平</span>
+          <div class="form-input" data-fill="大学联赛"><span class="fill-text">大学联赛</span></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <span class="form-label">既往伤病史</span>
+          <div class="form-input" data-fill="右踝扭伤 (2024)"><span class="fill-text">右踝扭伤 (2024)</span></div>
+        </div>
+      </div>
+      <div class="form-btn">下一步：上传视频</div>
+    </div>
+  </div>
+
+  <!-- ===== Screen 3: Upload ===== -->
+  <div class="screen" id="s3">
+    <div class="upload-title">上传运动视频</div>
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">📹</div>
+      <div class="drop-text">拖拽视频文件到此处，或点击选择</div>
+      <div class="drop-hint">支持 MP4 / MOV / AVI，建议 1080P，时长 10-60 秒</div>
+    </div>
+    <div class="action-tags">
+      <div class="action-tag selected">投篮</div>
+      <div class="action-tag">运球</div>
+      <div class="action-tag">跳跃</div>
+      <div class="action-tag">变向</div>
+    </div>
+    <div class="upload-btn">开始 AI 分析</div>
+  </div>
+
+  <!-- ===== Screen 4: Analysis Progress ===== -->
+  <div class="screen" id="s4">
+    <div class="analysis-title">AI 正在分析中…</div>
+    <div class="progress-ring">
+      <svg width="160" height="160">
+        <circle class="ring-bg" cx="80" cy="80" r="70"/>
+        <circle class="ring-fg" id="ringFg" cx="80" cy="80" r="70"/>
+      </svg>
+      <div class="pct" id="ringPct">0%</div>
+    </div>
+    <div class="stages">
+      <div class="stage" id="stg1"><div class="stage-circle">①</div><div class="stage-label">视频预处理</div></div>
+      <div class="stage" id="stg2"><div class="stage-circle">②</div><div class="stage-label">姿态识别</div></div>
+      <div class="stage" id="stg3"><div class="stage-circle">③</div><div class="stage-label">动作分析</div></div>
+      <div class="stage" id="stg4"><div class="stage-circle">④</div><div class="stage-label">风险评估</div></div>
+    </div>
+  </div>
+
+  <!-- ===== Screen 5: Report ===== -->
+  <div class="screen" id="s5">
+    <div class="report-title">风险评估报告 — 张伟</div>
+    <div class="report-grid">
+      <!-- Radar chart -->
+      <div>
+        <div class="radar-box">
+          <svg width="240" height="240" id="radarSvg">
+            <!-- grid -->
+            <g stroke="rgba(255,255,255,0.1)" fill="none" stroke-width="1">
+              <polygon points="120,30 199,75 199,165 120,210 41,165 41,75"/>
+              <polygon points="120,60 174,90 174,150 120,180 66,150 66,90"/>
+              <polygon points="120,90 149,105 149,135 120,150 91,135 91,105"/>
+            </g>
+            <g stroke="rgba(255,255,255,0.08)" stroke-width="1">
+              <line x1="120" y1="30" x2="120" y2="210"/>
+              <line x1="41" y1="75" x2="199" y2="165"/>
+              <line x1="41" y1="165" x2="199" y2="75"/>
+            </g>
+            <!-- data polygon (animated) -->
+            <polygon id="radarPoly" points="120,120 120,120 120,120 120,120 120,120 120,120"
+              fill="url(#radarFill)" stroke="#00d4ff" stroke-width="2" stroke-linejoin="round"
+              style="transition: all 0.8s ease;"/>
+            <!-- labels -->
+            <g fill="rgba(255,255,255,0.6)" font-size="12" text-anchor="middle">
+              <text x="120" y="20">膝关节负荷</text>
+              <text x="214" y="75">落地稳定性</text>
+              <text x="214" y="172">躯干控制</text>
+              <text x="120" y="228">动作对称性</text>
+              <text x="26" y="172">发力角度</text>
+              <text x="26" y="75">疲劳指数</text>
+            </g>
+          </svg>
+        </div>
+        <div class="radar-label">六维风险评估雷达图</div>
+        <!-- skeleton demo -->
+        <div class="skeleton-demo">
+          <div class="skeleton-frame">
+            <div class="skeleton-figure">
+              <svg width="60" height="70" viewBox="0 0 60 70">
+                <circle cx="30" cy="10" r="5"/>
+                <line x1="30" y1="15" x2="30" y2="35"/>
+                <line x1="30" y1="22" x2="15" y2="32"/>
+                <line x1="30" y1="22" x2="45" y2="32"/>
+                <line x1="30" y1="35" x2="20" y2="55"/>
+                <line x1="30" y1="35" x2="40" y2="55"/>
+                <line x1="20" y1="55" x2="18" y2="68"/>
+                <line x1="40" y1="55" x2="42" y2="68"/>
+              </svg>
+            </div>
+          </div>
+          <div class="skeleton-info">
+            <b>姿态骨架追踪</b><br>
+            MediaPipe Pose · 33 关键点<br>
+            实时叠加于原始视频
+          </div>
+        </div>
+      </div>
+      <!-- Risk cards -->
+      <div class="risk-cards">
+        <div class="risk-card high">
+          <div class="risk-icon">⚠️</div>
+          <div class="risk-info">
+            <div class="risk-name">膝关节负荷</div>
+            <div class="risk-level">高风险 — 落地缓冲不足</div>
+          </div>
+          <div class="risk-score">78</div>
+        </div>
+        <div class="risk-card mid">
+          <div class="risk-icon">⚡</div>
+          <div class="risk-info">
+            <div class="risk-name">动作对称性</div>
+            <div class="risk-level">中等风险 — 左右发力不均</div>
+          </div>
+          <div class="risk-score">56</div>
+        </div>
+        <div class="risk-card low">
+          <div class="risk-icon">✅</div>
+          <div class="risk-info">
+            <div class="risk-name">躯干控制</div>
+            <div class="risk-level">低风险 — 核心稳定良好</div>
+          </div>
+          <div class="risk-score">28</div>
+        </div>
+        <div class="risk-card mid">
+          <div class="risk-icon">⚡</div>
+          <div class="risk-info">
+            <div class="risk-name">疲劳指数</div>
+            <div class="risk-level">中等风险 — 后半程动作变形</div>
+          </div>
+          <div class="risk-score">62</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const screens = ['s1','s2','s3','s4','s5'];
+const durations = [4000, 5500, 4500, 6000, 7000]; // ms per screen
+let idx = 0;
+let startTime = Date.now();
+const totalDuration = durations.reduce((a,b)=>a+b,0);
+
+function showScreen(i) {
+  screens.forEach((s,j) => {
+    document.getElementById(s).classList.toggle('active', i===j);
+  });
+  document.getElementById('cur-step').textContent = i+1;
+  // trigger screen-specific animations
+  if (i===1) animateForm();
+  if (i===2) animateUpload();
+  if (i===3) animateProgress();
+  if (i===4) animateReport();
+}
+
+// --- Form fill animation ---
+function animateForm() {
+  const inputs = document.querySelectorAll('#s2 .form-input');
+  inputs.forEach((inp, i) => {
+    inp.classList.remove('filled');
+    setTimeout(() => inp.classList.add('filled'), 400 + i*500);
+  });
+}
+
+// --- Upload dragover animation ---
+function animateUpload() {
+  const dz = document.getElementById('dropZone');
+  setTimeout(() => dz.classList.add('dragover'), 800);
+  setTimeout(() => dz.classList.remove('dragover'), 2000);
+}
+
+// --- Progress ring + stages ---
+function animateProgress() {
+  const ring = document.getElementById('ringFg');
+  const pctEl = document.getElementById('ringPct');
+  const stages = [
+    {el:'stg1', at:0, type:'active'},
+    {el:'stg1', at:1200, type:'done'},
+    {el:'stg2', at:1200, type:'active'},
+    {el:'stg2', at:2400, type:'done'},
+    {el:'stg3', at:2400, type:'active'},
+    {el:'stg3', at:3600, type:'done'},
+    {el:'stg4', at:3600, type:'active'},
+    {el:'stg4', at:4800, type:'done'},
+  ];
+  stages.forEach(s => {
+    setTimeout(() => {
+      const el = document.getElementById(s.el);
+      el.classList.remove('active','done');
+      el.classList.add(s.type);
+    }, s.at);
+  });
+  // ring fill
+  const steps = 60;
+  for (let i=0; i<=steps; i++) {
+    setTimeout(() => {
+      const p = i/steps;
+      ring.style.strokeDashoffset = 440 * (1-p);
+      pctEl.textContent = Math.round(p*100) + '%';
+    }, i * (5000/steps));
+  }
+}
+
+// --- Radar chart animation ---
+function animateReport() {
+  setTimeout(() => {
+    // values: knee=78 high, symmetry=56, trunk=28(low→good), fatigue=62
+    // 6 axes: 膝关节负荷, 落地稳定性, 躯干控制, 动作对称性, 发力角度, 疲劳指数
+    // center=120,120, radius=90 max
+    const vals = [0.78, 0.45, 0.28, 0.56, 0.40, 0.62]; // 0-1
+    const cx=120, cy=120, r=90;
+    const angles = [-90, -30, 30, 90, 150, 210]; // degrees
+    const pts = vals.map((v,i) => {
+      const a = angles[i]*Math.PI/180;
+      return `${cx + Math.cos(a)*r*v},${cy + Math.sin(a)*r*v}`;
+    }).join(' ');
+    document.getElementById('radarPoly').setAttribute('points', pts);
+  }, 500);
+}
+
+// --- Main loop ---
+function next() {
+  idx++;
+  if (idx >= screens.length) {
+    // restart
+    idx = 0;
+  }
+  showScreen(idx);
+  if (idx < screens.length - 1) {
+    setTimeout(next, durations[idx]);
+  } else {
+    // last screen, wait longer then loop
+    setTimeout(next, durations[idx]);
+  }
+}
+
+// progress bar
+function updateProgress() {
+  const elapsed = Date.now() - startTime;
+  const pct = Math.min(100, (elapsed % totalDuration) / totalDuration * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  requestAnimationFrame(updateProgress);
+}
+
+// start
+showScreen(0);
+setTimeout(next, durations[0]);
+updateProgress();
+</script>
+</body>
+</html>

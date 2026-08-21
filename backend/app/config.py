@@ -32,5 +32,7 @@ SMOOTH_POLYORDER = 2
 RISK_LOW_THRESHOLD = 35            # <35 低风险
 RISK_HIGH_THRESHOLD = 65           # >65 高风险
 
-# CORS
-CORS_ORIGINS = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
+# CORS — 允许所有来源（公网部署）
+import os as _os
+_extra = _os.getenv("CORS_ORIGINS", "")
+CORS_ORIGINS = ["*"] if not _extra else _extra.split(",")

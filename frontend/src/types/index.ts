@@ -231,6 +231,11 @@ export interface AnalysisResult {
   features: Features | null
   risk: Risk | null
   problem_moments?: ProblemMoment[]
+  action_validity?: {
+    score: number
+    is_valid: boolean
+    messages: string[]
+  }
   created_at: string
 }
 

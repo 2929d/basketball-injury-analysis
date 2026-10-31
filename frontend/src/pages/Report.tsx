@@ -9,8 +9,19 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import { getResult, getAnnotatedVideoUrl, getProblemMomentVideoUrl, getPdfUrl, getTimeline, type FrameFeature } from '../services/api'
-import type { AnalysisResult } from '../types'
+import { getAnalysisResult } from '../analysis/pipeline'
+import { getLocalVideoUrl } from '../analysis/manager'
+import {
+  drawSkeletonFromKeypoints,
+  detectLiveTarget,
+  preloadPoseDetector,
+  resetPoseTargetTracks,
+  seedPoseTargetFromKeypoints,
+  lockPoseTargetAt,
+  landmarksToKeypoints,
+  blendKeypoints,
+} from '../analysis/pose_estimation'
+import type { AnalysisResult, FrameTimelinePoint, KP } from '../analysis/types'
 import { RISK_COLORS, fmtNum } from '../utils'
 import './Report.css'
 
@@ -38,32 +49,379 @@ export default function Report() {
   const [error, setError] = useState('')
   const reportRef = useRef<HTMLDivElement>(null)
   const [exporting, setExporting] = useState(false)
-  const [timeline, setTimeline] = useState<FrameFeature[]>([])
-  const [curFrame, setCurFrame] = useState<FrameFeature | null>(null)
+  const [timeline, setTimeline] = useState<FrameTimelinePoint[]>([])
+  const [curFrame, setCurFrame] = useState<FrameTimelinePoint | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const overlayRef = useRef<HTMLCanvasElement>(null)
+  /** 目标锁定状态: locked=已锁定运动员 / searching=识别中 / idle=当前帧没有可用目标 */
+  const [targetState, setTargetState] = useState<'locked' | 'searching' | 'idle'>('searching')
+  /** 手动点选运动员模式 */
+  const [picking, setPicking] = useState(false)
 
+  // 原始视频 blob URL(仅当次会话有效; 刷新页面后为 undefined)
+  const videoUrl = taskId ? getLocalVideoUrl(taskId) : undefined
+  const lastFrameRef = useRef<number>(-1)
+  const lastStateAtRef = useRef<number>(0)
+  const rafRef = useRef<number>(0)
+  /** 用户是否手动点选过运动员(手动选择优先于任何自动播种) */
+  const manualLockRef = useRef(false)
+  /** 手动锁定模式下, 上次实时跟随的时间戳(控制 250ms 间隔, 避免飘忽) */
+  const lastLiveAtRef = useRef(0)
+  /** 存储帧里的目标是否可信(motion=true 才是按运动能量判别出的运动员) */
+  const trustStoredTargetRef = useRef(false)
+
+  // useRef 保存最新数据, 避免事件监听闭包 stale
+  const resultRef = useRef(result)
+  const timelineRef = useRef(timeline)
+  useEffect(() => {
+    resultRef.current = result
+    timelineRef.current = timeline
+    trustStoredTargetRef.current = result?.analysis_target?.motion === true
+  }, [result, timeline])
+
+  /** 画布分辨率跟随显示尺寸(按 DPR 放大), 保证骨骼线在小尺寸显示时依然清晰 */
+  useEffect(() => {
+    const video = videoRef.current
+    const canvas = overlayRef.current
+    if (!video || !canvas) return
+    const sync = () => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      dprRef.current = dpr
+      const cw = video.clientWidth || canvas.clientWidth
+      const ch = video.clientHeight || canvas.clientHeight
+      if (!cw || !ch) return
+      const w = Math.max(120, Math.round(cw * dpr))
+      const h = Math.max(80, Math.round(ch * dpr))
+      if (canvas.width === w && canvas.height === h) return
+      canvas.width = w
+      canvas.height = h
+      const v = videoRef.current
+      if (v) drawSkeletonAtTime(v.currentTime)
+    }
+    sync()
+    const ro = new ResizeObserver(sync)
+    ro.observe(video)
+    window.addEventListener('resize', sync)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', sync)
+    }
+    // 仅在加载完成后绑定一次(此时视频元素已挂载)
+  }, [loading, videoUrl])
+
+  /** 二分查找 t 落在的 timeline 区间 [prev, next](相邻两个采样帧) */
+  const findSegment = (t: number): [FrameTimelinePoint, FrameTimelinePoint] | null => {
+    const tl = timelineRef.current
+    if (!tl.length) return null
+    let lo = 0
+    let hi = tl.length - 1
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (tl[mid].time < t) lo = mid + 1
+      else hi = mid
+    }
+    if (lo <= 0) return [tl[0], tl[0]]
+    if (lo >= tl.length) return [tl[tl.length - 1], tl[tl.length - 1]]
+    return [tl[lo - 1], tl[lo]]
+  }
+
+  /** 在相邻两个采样帧之间做关键点线性插值, 让骨骼随视频播放平滑移动(而非一帧一帧跳变) */
+  const interpolateKeypoints = (
+    ka: Record<string, KP> | undefined,
+    kb: Record<string, KP> | undefined,
+    alpha: number,
+  ): Record<string, KP> | undefined => {
+    if (!ka) return undefined
+    if (!kb) return ka
+    const out: Record<string, KP> = {}
+    for (const name of Object.keys(ka)) {
+      const a = ka[name]
+      const b = kb[name]
+      if (!a) continue
+      if (!b) {
+        out[name] = a
+        continue
+      }
+      out[name] = {
+        ...a,
+        x: a.x + (b.x - a.x) * alpha,
+        y: a.y + (b.y - a.y) * alpha,
+        visibility: Math.min(a.visibility, b.visibility),
+      }
+    }
+    return out
+  }
+
+  // ===== 实时骨骼叠加 =====
+  // 直接对当前视频帧跑姿态识别, 骨骼与画面严格同步, 彻底消除稀疏采样插值带来的延迟。
+  // 目标判定: 由 pose_target.ts 的跟踪器判别"运动员" —— 墙上海报/大屏画面里的
+  // 人形干扰目标在整段视频里几乎静止(运动能量≈0), 会被排除, 骨骼只跟随运动员。
+  const liveBusyRef = useRef(false)
+  const liveFailCountRef = useRef(0)
+  const liveDisabledRef = useRef(false)
+  const liveOkRef = useRef(false)
+
+  /** 当前 DPR, 用于 drawSkeleton 控制线宽(避免 Retina 屏线条过粗) */
+  const dprRef = useRef(1)
+
+  /** 当前显示的关键点(经 EMA 平滑后), rAF 每帧都据此绘制 */
+  const displayKpsRef = useRef<Record<string, KP> | undefined>(undefined)
+  /** 最近一次实时识别成功的关键点 */
+  const liveKpsRef = useRef<Record<string, KP> | undefined>(undefined)
+  /** 最近一次实时识别成功的时间戳 */
+  const liveTsRef = useRef(0)
+  /** 当前实际绘制来源: stored=仅存储帧插值 / live=实时识别(含平滑) */
+  const trackingSourceRef = useRef<'stored' | 'live'>('stored')
+  /** 向用户展示的数据来源状态 */
+  const [trackingMode, setTrackingMode] = useState<'stored' | 'live' | 'none'>('none')
+  const trackingModeRef = useRef<'stored' | 'live' | 'none'>('none')
+
+  /**
+   * 用存储帧里当前时刻的目标位置播种锁定 —— 让实时识别在任意拖动位置都能立刻
+   * 跟住运动员, 而不是从零开始重新判别(否则拖动到动作中段时可能短暂跟错人)。
+   */
+  const seedLockAtTime = (t: number) => {
+    // 用户手动点选过 → 以用户选择为准, 不再自动播种
+    if (manualLockRef.current || !trustStoredTargetRef.current) return
+    const pf = resultRef.current?.pose_frames
+    if (!pf || !pf.length) return
+    const seg = findSegment(t)
+    if (!seg) return
+    const [prev, next] = seg
+    const span = next.time - prev.time
+    const alpha = span > 0 ? Math.min(1, Math.max(0, (t - prev.time) / span)) : 0
+    const kps = interpolateKeypoints(
+      pf[prev.frame]?.keypoints,
+      pf[next.frame]?.keypoints,
+      alpha,
+    )
+    if (kps) seedPoseTargetFromKeypoints(kps)
+  }
+
+  const drawLiveSkeleton = async (video: HTMLVideoElement) => {
+    if (liveBusyRef.current || liveDisabledRef.current) return
+    if (video.readyState < 2) return
+    liveBusyRef.current = true
+    try {
+      const target = await detectLiveTarget(video)
+      if (target.landmarks) {
+        liveFailCountRef.current = 0
+        liveOkRef.current = true
+        liveKpsRef.current = landmarksToKeypoints(target.landmarks)
+        liveTsRef.current = performance.now()
+        trackingSourceRef.current = 'live'
+        setTargetState(target.locked ? 'locked' : 'searching')
+      } else {
+        // 未识别到人体/识别失败: 连续多次失败后回退到存储帧插值
+        liveFailCountRef.current += 1
+        if (liveFailCountRef.current > 60) liveDisabledRef.current = true
+        if (liveFailCountRef.current > 3) {
+          liveOkRef.current = false
+          // 实时跟丢后, 若太久没有新数据, 绘制会自然回退到存储帧插值
+        }
+        setTargetState('idle')
+      }
+    } finally {
+      liveBusyRef.current = false
+    }
+  }
+
+  /**
+   * 进入/退出"手动点选运动员"模式。
+   * 自动判别在画面里有大型人形干扰目标(墙上海报/大屏画面)时可能仍会跟错人,
+   * 这时让用户直接在画面上点一下运动员即可锁定。
+   */
+  const togglePicking = () => {
+    const next = !picking
+    setPicking(next)
+    const v = videoRef.current
+    if (next && v && !v.paused) v.pause()
+  }
+
+  /** 手动点选运动员: 以点击位置为准锁定, 后续实时识别只跟随该目标 */
+  const handleOverlayClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!picking) return
+    const canvas = overlayRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    if (!rect.width || !rect.height) return
+    const x = (e.clientX - rect.left) / rect.width
+    const y = (e.clientY - rect.top) / rect.height
+    lockPoseTargetAt(x, y)
+    manualLockRef.current = true
+    setPicking(false)
+    const video = videoRef.current
+    if (video) void drawLiveSkeleton(video)
+  }
+
+  /**
+   * 根据给定时间更新指标面板 + 绘制骨骼叠加。
+   * 绘制策略:
+   *  - 基础层: 分析阶段存储帧插值(稳定, 覆盖整段视频)
+   *  - 修正层: 对当前视频帧做实时识别, 若成功且可信, 通过 EMA 平滑
+   *    把当前显示姿态过渡到实时结果, 消除稀疏采样带来的延迟感
+   *  - 实时跟丢后自动回退到存储帧插值, 不会出现骨骼悬空
+   */
+  const drawSkeletonAtTime = (t: number) => {
+    const canvas = overlayRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx) return
+
+    // 1. 计算存储帧插值(保底数据)
+    let storedKps: Record<string, KP> | undefined
+    const seg = findSegment(t)
+    let shown: FrameTimelinePoint | null = null
+    if (seg) {
+      const [prev, next] = seg
+      const span = next.time - prev.time
+      const alpha = span > 0 ? Math.min(1, Math.max(0, (t - prev.time) / span)) : 0
+      const pf = resultRef.current?.pose_frames
+      storedKps = interpolateKeypoints(pf?.[prev.frame]?.keypoints, pf?.[next.frame]?.keypoints, alpha)
+      shown = alpha < 0.5 ? prev : next
+    }
+
+    // 2. 决定目标关键点: 实时数据新鲜则优先用实时, 否则回退存储帧
+    const now = performance.now()
+    const liveFresh = liveTsRef.current > 0 && now - liveTsRef.current < 220
+    const targetKps = liveFresh && liveKpsRef.current ? liveKpsRef.current : storedKps
+    const source: 'stored' | 'live' = liveFresh && liveKpsRef.current ? 'live' : 'stored'
+
+    // 3. EMA 平滑: 每帧都把当前显示姿态向 targetKps 过渡, 避免硬切跳变
+    if (targetKps && Object.keys(targetKps).length > 0) {
+      const switching = trackingSourceRef.current !== source
+      // live 时 alpha=0.85 紧跟实时(每 80ms 一次); stored 0.5 平滑跟随视频时间
+      const alpha = switching ? 0.4 : source === 'live' ? 0.85 : 0.5
+      displayKpsRef.current = blendKeypoints(displayKpsRef.current, targetKps, alpha)
+      trackingSourceRef.current = source
+    } else {
+      displayKpsRef.current = undefined
+    }
+
+    // 4. 绘制
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (displayKpsRef.current && Object.keys(displayKpsRef.current).length > 0) {
+      drawSkeletonFromKeypoints(ctx, displayKpsRef.current, canvas.width, canvas.height, null, dprRef.current)
+    }
+
+    // 5. 节流更新数据来源徽标
+    const nextMode = displayKpsRef.current ? source : 'none'
+    if (nextMode !== trackingModeRef.current) {
+      trackingModeRef.current = nextMode
+      // 仅在变化时调用 React setState, 不会高频触发重渲染
+      setTrackingMode(nextMode)
+    }
+
+    // 6. 指标面板更新节流: 帧号变化 且 距上次 ≥120ms 才触发 React 重渲染
+    if (shown && shown.frame !== lastFrameRef.current && now - lastStateAtRef.current >= 120) {
+      lastFrameRef.current = shown.frame
+      lastStateAtRef.current = now
+      setCurFrame(shown)
+    }
+  }
+
+  /** rAF 循环: 持续低频实时识别 + 播放时绘制骨骼叠加
+   *  - 播放中: 逐显示帧绘制 + 每 120ms 一次实时识别修正
+   *  - 暂停时: 也持续低频识别, 让暂停/Seek 后第一帧立即有骨骼叠加
+   *    (避免「暂停后没骨骼、必须播放一次才出现」的体验问题)
+   */
+  const tick = () => {
+    const video = videoRef.current
+    if (!video) return
+    // 不论播放/暂停, 都用 rAF 持续重绘骨骼叠加:
+    //  - 播放时: video.currentTime 变化, 存储帧插值实时跟随
+    //  - 暂停时: currentTime 不变, 但实时识别每 80ms 更新一次 liveKps, 重绘才会反映
+    drawSkeletonAtTime(video.currentTime)
+    const now = performance.now()
+    // 实时识别间隔: 80ms ≈ 12Hz, 让 7-15fps 采样率补到 12Hz 实时跟随
+    if (now - lastLiveAtRef.current >= 80) {
+      lastLiveAtRef.current = now
+      void drawLiveSkeleton(video)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+  }
+  const startRafLoop = () => {
+    cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(tick)
+  }
+  const stopRafLoopAndDraw = () => {
+    // 不再取消 rAF: 实时识别循环继续运行, 暂停/Seek 后也能立刻显示骨骼
+    const video = videoRef.current
+    if (video) {
+      // 暂停/Seek 时绕过节流, 指标面板立即刷新到当前时间
+      lastStateAtRef.current = 0
+      seedLockAtTime(video.currentTime)
+      drawSkeletonAtTime(video.currentTime)
+      // 不论是否手动锁定, 暂停/seek 后立即跑一次实时识别, 让首帧立即有骨骼叠加
+      void drawLiveSkeleton(video)
+    }
+  }
+  // 组件卸载时清理 rAF
+  useEffect(() => () => cancelAnimationFrame(rafRef.current), [])
+
+  /** timeUpdate 事件回调(暂停/Seek 兜底; 播放中由 rAF 循环接管) */
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const t = e.currentTarget.currentTime
-    if (timeline.length) {
-      const f = timeline.reduce((p, c) => (Math.abs(c.time - t) < Math.abs(p.time - t) ? c : p))
-      setCurFrame(f)
+    const v = e.currentTarget
+    if (v.paused || v.ended) {
+      drawSkeletonAtTime(v.currentTime)
+      // 暂停/seek 时也跑一次实时识别, 让当前画面立即有骨骼叠加
+      void drawLiveSkeleton(v)
     }
   }
 
   const exportPDF = async () => {
-    if (!taskId || exporting) return
+    if (exporting) return
+    const el = reportRef.current
+    if (!el) return
     setExporting(true)
     try {
-      const res = await fetch(getPdfUrl(taskId))
-      if (!res.ok) throw new Error('导出失败')
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `篮球分析报告_${taskId}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      alert('导出失败，请重试')
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ])
+      // 导出 PDF 时隐藏视频播放器、外链演示按钮等动态内容(视频链接不放进 PDF)
+      const hideSel = '.no-pdf, .no-print'
+      const hiddenEls = Array.from(el.querySelectorAll<HTMLElement>(hideSel))
+      const prevDisplay = hiddenEls.map((h) => h.style.display)
+      hiddenEls.forEach((h) => {
+        h.style.display = 'none'
+      })
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+        windowWidth: el.scrollWidth,
+      })
+
+      // 恢复被隐藏的元素
+      hiddenEls.forEach((h, i) => {
+        h.style.display = prevDisplay[i]
+      })
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pageW = pdf.internal.pageSize.getWidth()
+      const pageH = pdf.internal.pageSize.getHeight()
+      const imgW = pageW
+      const imgH = (canvas.height * imgW) / canvas.width
+      const imgData = canvas.toDataURL('image/jpeg', 0.92)
+
+      let heightLeft = imgH
+      let position = 0
+      pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH)
+      heightLeft -= pageH
+      while (heightLeft > 0) {
+        position -= pageH
+        pdf.addPage()
+        pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH)
+        heightLeft -= pageH
+      }
+      const an = result?.action_type || '运动员'
+      const date = (result?.created_at || '').slice(0, 10)
+      pdf.save(`篮球损伤风险分析报告_${an}_${date}.pdf`)
+    } catch (e) {
+      console.error(e)
+      alert('PDF 导出失败：' + (e instanceof Error ? e.message : String(e)))
     } finally {
       setExporting(false)
     }
@@ -71,21 +429,57 @@ export default function Report() {
 
   useEffect(() => {
     if (!taskId) return
-    getResult(taskId)
-      .then((d) => {
-        setResult(d)
-        setLoading(false)
-      })
-      .catch((e) => {
-        setError('加载报告失败：' + (e?.message || '请确认后端服务已启动'))
-        setLoading(false)
-      })
+    lastFrameRef.current = -1
+    lastStateAtRef.current = 0
+    cancelAnimationFrame(rafRef.current)
+    // 切换报告: 清空上一次的时序轨迹、锁定状态与平滑缓存
+    manualLockRef.current = false
+    displayKpsRef.current = undefined
+    liveKpsRef.current = undefined
+    liveTsRef.current = 0
+    liveFailCountRef.current = 0
+    liveDisabledRef.current = false
+    liveOkRef.current = false
+    trackingSourceRef.current = 'stored'
+    trackingModeRef.current = 'none'
+    setTrackingMode('none')
+    resetPoseTargetTracks(false)
+    const d = getAnalysisResult(taskId)
+    if (d) {
+      setResult(d)
+      setTimeline(d.timeline || [])
+    } else {
+      setError('未找到该分析报告（数据仅保存在本浏览器中，请从历史记录进入）')
+    }
+    setLoading(false)
   }, [taskId])
 
+  // 报告加载后, 根据分析阶段的目标判别结论设置锁定徽标
   useEffect(() => {
-    if (!taskId) return
-    getTimeline(taskId).then(setTimeline).catch(() => {})
-  }, [taskId])
+    if (!result) return
+    if (result.analysis_target?.motion === true) setTargetState('locked')
+    else if (result.analysis_target?.motion === false) setTargetState('searching')
+    else setTargetState('idle')
+  }, [result])
+
+  // 进入报告页即预加载姿态模型, 让实时骨骼叠加尽快就绪(分析页已加载过则秒回)
+  useEffect(() => {
+    if (!videoUrl) return
+    void preloadPoseDetector().catch(() => {})
+  }, [videoUrl])
+
+  // 结果/视频就绪后, 如果视频已经具备元数据, 立即绘制首帧骨骼叠加并启动持续识别循环
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !result || !timeline.length) return
+    if (video.readyState >= 1) {
+      seedLockAtTime(video.currentTime)
+      drawSkeletonAtTime(video.currentTime)
+      // 进入报告页立即跑一次实时识别, 并启动持续识别循环, 让暂停状态下也有骨骼叠加
+      void drawLiveSkeleton(video)
+      startRafLoop()
+    }
+  }, [result, timeline, videoUrl])
 
   const radarData = useMemo(() => {
     if (!result?.risk?.items) return []
@@ -102,7 +496,8 @@ export default function Report() {
       const key = DIM_MAP[it.category] || it.category
       scoreMap[key] = it.score
     })
-    return dims.map((d) => ({ dim: d, score: scoreMap[d] ?? 0 }))
+    // 最低显示 6 分, 避免 0 分轴完全塌陷成"空白"
+    return dims.map((d) => ({ dim: d, score: Math.max(6, scoreMap[d] ?? 0) }))
   }, [result])
 
   if (loading) {
@@ -143,7 +538,7 @@ export default function Report() {
             <p>动作类型：{result.action_type} · 生成时间：{result.created_at?.slice(0, 19).replace('T', ' ')}</p>
           </div>
         </div>
-        <div className="report-head-actions">
+        <div className="report-head-actions no-print">
           <button className="btn btn-outline" onClick={() => navigate('/upload')}>
             重新测试
           </button>
@@ -161,7 +556,7 @@ export default function Report() {
         <div className="card overview-card">
           <div className="overview-ring" style={{ '--ring-color': overallColor } as React.CSSProperties}>
             <svg viewBox="0 0 120 120" className="overview-ring-svg">
-              <circle cx="60" cy="60" r="52" fill="none" stroke="#eef2f7" strokeWidth="10" />
+              <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="10" />
               <circle
                 cx="60"
                 cy="60"
@@ -189,6 +584,16 @@ export default function Report() {
               >
                 {risk.overall_level}
               </span>
+              {/* 数据完整度: 低于 70% 说明有指标未识别, 评分仅供参考 */}
+              {risk.data_confidence !== undefined && (
+                <span
+                  className={risk.data_confidence < 0.7 ? 'confidence-chip warn' : 'confidence-chip'}
+                  title="可识别的动作指标占比，越低说明越多指标未能可靠识别"
+                >
+                  {risk.data_confidence < 0.7 ? '⚠ ' : '✓ '}数据完整度{' '}
+                  {Math.round(risk.data_confidence * 100)}%
+                </span>
+              )}
             </div>
             <div className="overview-prob">
               <div className="prob-label">
@@ -205,6 +610,32 @@ export default function Report() {
                 />
               </div>
             </div>
+            {/* 主要风险部位: 把高/中风险部位铺成紧凑标签, 避免下方大片留白 */}
+            {risk.items && risk.items.length > 0 && (
+              <div className="overview-hotspots">
+                {risk.items
+                  .filter((it) => it.level === '高风险' || it.level === '中风险')
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 4)
+                  .map((it) => (
+                    <span
+                      key={it.category}
+                      className={`hotspot-chip ${it.level === '高风险' ? 'is-high' : 'is-mid'}`}
+                      title={`${it.category} ${it.score} 分（${it.level}）`}
+                    >
+                      <span className="hotspot-dot" />
+                      <span className="hotspot-name">{it.category}</span>
+                      <span className="hotspot-score">{it.score}</span>
+                    </span>
+                  ))}
+                {risk.items.every((it) => it.level === '低风险') && (
+                  <span className="hotspot-chip is-low">
+                    <span className="hotspot-dot" />
+                    <span className="hotspot-name">各部位均在正常范围内</span>
+                  </span>
+                )}
+              </div>
+            )}
             <p className="overview-summary">{risk.summary}</p>
           </div>
         </div>
@@ -227,9 +658,9 @@ export default function Report() {
                 <Radar
                   name="风险评分"
                   dataKey="score"
-                  stroke="#00b4d8"
+                  stroke="#12b3d6"
                   strokeWidth={2}
-                  fill="#00b4d8"
+                  fill="#12b3d6"
                   fillOpacity={0.35}
                 />
                 <Tooltip
@@ -247,38 +678,91 @@ export default function Report() {
           )}
         </div>
 
-        <div className="card">
+        <div className="card no-pdf">
           <div className="section-title">骨骼叠加分析视频（逐帧分析）</div>
-          <div className="video-wrap">
-            <video
-              src={getAnnotatedVideoUrl(taskId!)}
-              controls
-              playsInline
-              onTimeUpdate={handleTimeUpdate}
-            />
-            <p className="video-tip">拖动进度条或暂停，下方实时显示当前帧的生物力学特征值</p>
-          </div>
-          {curFrame && (
-            <div className="frame-info">
-              <div className="frame-info-time">⏱ {curFrame.time.toFixed(2)}s · 第{curFrame.frame}帧</div>
-              <div className="frame-info-grid">
-                <div className="frame-metric">
-                  <span className="fm-label">膝屈曲</span>
-                  <span className="fm-value">{curFrame.knee_flexion}°</span>
-                </div>
-                <div className="frame-metric">
-                  <span className="fm-label">膝外翻</span>
-                  <span className="fm-value" style={{ color: curFrame.knee_valgus > 10 ? '#e24b4a' : '#374151' }}>{curFrame.knee_valgus}°</span>
-                </div>
-                <div className="frame-metric">
-                  <span className="fm-label">躯干前倾</span>
-                  <span className="fm-value" style={{ color: curFrame.trunk_lean > 38 ? '#e24b4a' : '#374151' }}>{curFrame.trunk_lean}°</span>
-                </div>
-                <div className="frame-metric">
-                  <span className="fm-label">躯干侧倾</span>
-                  <span className="fm-value" style={{ color: Math.abs(curFrame.trunk_lateral) > 8 ? '#e24b4a' : '#374151' }}>{curFrame.trunk_lateral}°</span>
-                </div>
+          {videoUrl ? (
+            <>
+              <div className="video-wrap overlay-wrap">
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  playsInline
+                  onTimeUpdate={handleTimeUpdate}
+                  onPlay={startRafLoop}
+                  onPause={stopRafLoopAndDraw}
+                  onEnded={stopRafLoopAndDraw}
+                  onSeeked={stopRafLoopAndDraw}
+                  onLoadedData={stopRafLoopAndDraw}
+                />
+                <canvas
+                  ref={overlayRef}
+                  className={`skeleton-overlay${picking ? ' picking' : ''}`}
+                  width={640}
+                  height={360}
+                  onClick={handleOverlayClick}
+                />
               </div>
+              <div className="video-tools">
+                <span
+                  className={`target-badge ${
+                    targetState === 'locked'
+                      ? 'is-locked'
+                      : targetState === 'searching'
+                        ? 'is-searching'
+                        : 'is-idle'
+                  }`}
+                  title={trackingMode === 'live' ? '实时识别修正中，骨骼与当前画面同步' : '基于分析阶段采样帧插值回放'}
+                >
+                  {targetState === 'locked'
+                    ? trackingMode === 'live'
+                      ? '🎯 实时跟随 · 已锁定运动员'
+                      : '🎯 分析采样回放 · 已锁定运动员'
+                    : targetState === 'searching'
+                      ? '正在识别运动员目标…'
+                      : trackingMode === 'live'
+                        ? '⏳ 实时识别中…'
+                        : '当前帧未识别到目标'}
+                </span>
+                <button className="pick-btn" onClick={togglePicking}>
+                  {picking ? '请在画面中点击运动员…' : '🎯 骨骼不在运动员身上？点此手动锁定'}
+                </button>
+              </div>
+              {result.analysis_target?.motion === false && (
+                <p className="video-warn">
+                  ⚠️ 本次分析的画面里，主要人形目标几乎静止（很可能是墙上海报 / 大屏画面里的人像），
+                  骨骼与评分可能来自该干扰目标而非运动员。建议重新上传分析，或用上方按钮在画面中
+                  点选运动员锁定后再查看动作。
+                </p>
+              )}
+              <p className="video-tip">拖动进度条或暂停，下方实时显示当前帧的生物力学特征值；绿色线条为骨骼叠加</p>
+              {curFrame && (
+                <div className="frame-info">
+                  <div className="frame-info-time">⏱ {curFrame.time.toFixed(2)}s · 第{curFrame.frame}帧</div>
+                  <div className="frame-info-grid">
+                    <div className="frame-metric">
+                      <span className="fm-label">膝屈曲</span>
+                      <span className="fm-value">{curFrame.knee_flexion}°</span>
+                    </div>
+                    <div className="frame-metric">
+                      <span className="fm-label">膝外翻</span>
+                      <span className="fm-value" style={{ color: curFrame.knee_valgus > 10 ? '#e24b4a' : '#374151' }}>{curFrame.knee_valgus}°</span>
+                    </div>
+                    <div className="frame-metric">
+                      <span className="fm-label">躯干前倾</span>
+                      <span className="fm-value" style={{ color: curFrame.trunk_lean > 38 ? '#e24b4a' : '#374151' }}>{curFrame.trunk_lean}°</span>
+                    </div>
+                    <div className="frame-metric">
+                      <span className="fm-label">躯干侧倾</span>
+                      <span className="fm-value" style={{ color: Math.abs(curFrame.trunk_lateral) > 8 ? '#e24b4a' : '#374151' }}>{curFrame.trunk_lateral}°</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="empty">
+              🔒 视频仅在分析当次会话中可回放。刷新页面后请通过「历史记录」查看完整报告，文字数据完整保留。
             </div>
           )}
         </div>
@@ -397,7 +881,7 @@ export default function Report() {
               <div className="profile-grid">
                 <div className="profile-item"><span>年龄</span><strong>{result.athlete_info.age}岁</strong></div>
                 <div className="profile-item"><span>性别</span><strong>{result.athlete_info.gender}</strong></div>
-                <div className="profile-item"><span>BMI</span><strong>{(result.athlete_info.weight_kg / Math.pow(result.athlete_info.height_cm / 100, 2)).toFixed(1)}</strong></div>
+                <div className="profile-item"><span>BMI</span><strong>{(Number(result.athlete_info.weight_kg) / Math.pow(Number(result.athlete_info.height_cm) / 100, 2)).toFixed(1)}</strong></div>
                 <div className="profile-item"><span>运动水平</span><strong>{result.athlete_info.level}</strong></div>
                 <div className="profile-item"><span>惯用腿</span><strong>{result.athlete_info.dominant_leg}</strong></div>
                 <div className="profile-item"><span>训练频率</span><strong>{result.athlete_info.weekly_training_freq}次/周</strong></div>
@@ -475,12 +959,27 @@ export default function Report() {
                   <span className="problem-issue-tag">{m.issue}</span>
                   <span className="problem-time">@ {m.timestamp.toFixed(1)}s</span>
                 </div>
-                <video
-                  src={getProblemMomentVideoUrl(taskId!, m.clip_index)}
-                  controls
-                  playsInline
-                  loop
-                />
+                {videoUrl ? (
+                  <video
+                    className="no-pdf"
+                    src={videoUrl}
+                    controls
+                    playsInline
+                    loop
+                    onLoadedMetadata={(e) => {
+                      try {
+                        // 自动定位到问题时刻(往前保留 0.5s 上下文便于观察)
+                        e.currentTarget.currentTime = Math.max(0, m.timestamp - 0.5)
+                      } catch {
+                        /* ignore */
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="problem-no-video no-pdf">
+                    🔒 视频仅在当次会话可回放（问题时刻 @{m.timestamp.toFixed(1)}s）
+                  </div>
+                )}
                 <p className="problem-desc">💡 {m.description}</p>
               </div>
             ))}
@@ -521,22 +1020,26 @@ export default function Report() {
                     </div>
                   </div>
                   <div className="risk-cols">
-                    <div className="risk-col">
-                      <h5>主要原因</h5>
-                      <ul>
-                        {it.main_causes.map((c, j) => (
-                          <li key={j}>{c}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="risk-col">
-                      <h5>改进建议</h5>
-                      <ul>
-                        {it.recommendations.map((c, j) => (
-                          <li key={j}>{c}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  <div className="risk-col">
+                    <h5>主要原因</h5>
+                    <ul>
+                      {it.main_causes.length > 0 ? (
+                        it.main_causes.map((c, j) => <li key={j}>{c}</li>)
+                      ) : (
+                        <li className="risk-col-empty">当前指标在正常范围内，无明显风险成因</li>
+                      )}
+                    </ul>
+                  </div>
+                  <div className="risk-col">
+                    <h5>改进建议</h5>
+                    <ul>
+                      {it.recommendations.length > 0 ? (
+                        it.recommendations.map((c, j) => <li key={j}>{c}</li>)
+                      ) : (
+                        <li className="risk-col-empty">保持当前动作模式，注意落地缓冲与关节对位</li>
+                      )}
+                    </ul>
+                  </div>
                   </div>
                   {it.exercises && it.exercises.length > 0 && (
                     <div className="risk-exercises">
@@ -550,7 +1053,7 @@ export default function Report() {
                             </div>
                             <p className="ex-steps">{ex.steps}</p>
                             <a
-                              className="ex-video"
+                              className="ex-video no-pdf"
                               href={`https://search.bilibili.com/all?keyword=${encodeURIComponent(ex.video)}`}
                               target="_blank"
                               rel="noreferrer"
@@ -635,7 +1138,7 @@ export default function Report() {
           <div className="grid grid-4">
             <FeatureCard
               title="膝关节"
-              color="#00b4d8"
+              color="#12b3d6"
               metrics={[
                 { k: '触地屈曲', v: `${fmtNum(features.knee.initial_contact_flexion_deg)}°` },
                 { k: '最大屈曲', v: `${fmtNum(features.knee.max_flexion_deg)}°` },
@@ -646,7 +1149,7 @@ export default function Report() {
             />
             <FeatureCard
               title="髋关节"
-              color="#06d6a0"
+              color="#8be04b"
               metrics={[
                 { k: '屈曲角度', v: `${fmtNum(features.hip.flexion_deg)}°` },
                 { k: '内收角度', v: `${fmtNum(features.hip.adduction_deg)}°` },
@@ -735,7 +1238,7 @@ export default function Report() {
       )}
 
       {/* 底部操作 */}
-      <div className="report-foot">
+      <div className="report-foot no-print">
         <button className="btn btn-primary btn-lg" onClick={() => navigate('/upload')}>
           重新测试
         </button>
@@ -825,7 +1328,7 @@ function PhaseTimeline({
   phases: AnalysisResult['phases']
 }) {
   const total = phases[phases.length - 1]?.end_time_ms || 1
-  const colors = ['#00b4d8', '#06d6a0', '#ff6b35', '#7c5cff', '#ffd166']
+  const colors = ['#12b3d6', '#8be04b', '#ff6b35', '#7c5cff', '#ffd166']
   return (
     <div className="phase-tl">
       <div className="phase-track">

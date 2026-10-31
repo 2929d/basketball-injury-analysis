@@ -1,0 +1,731 @@
+/* ===== 球鞋推荐页 ===== */
+.sneakers-page {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.snk-title {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.snk-intro {
+  color: #6b7280;
+  margin-bottom: 24px;
+  line-height: 1.7;
+}
+
+.snk-intro b {
+  color: var(--color-primary-dark, #0e93b3);
+}
+
+/* ---- 数据更新提示条 ---- */
+.snk-update-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(18, 179, 214, 0.08), rgba(18, 179, 214, 0.02));
+  border: 1px solid rgba(18, 179, 214, 0.2);
+  border-radius: 10px;
+}
+.snk-update-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.snk-update-date {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+.snk-update-tip {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-left: auto;
+}
+
+/* ---- 搜索与筛选 ---- */
+.snk-search-card {
+  margin-bottom: 24px;
+}
+
+.snk-search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.snk-search-input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.snk-input {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.snk-input:focus {
+  border-color: #12b3d6;
+  box-shadow: 0 0 0 3px rgba(18, 179, 214, 0.12);
+}
+
+.snk-btn-search,
+.snk-btn-dewu {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.snk-btn-search {
+  background: #e8452b;
+  color: #fff;
+}
+
+.snk-btn-search:hover {
+  background: #c93a22;
+}
+
+.snk-btn-dewu {
+  background: #00c8fa;
+  color: #fff;
+}
+
+.snk-btn-dewu:hover {
+  background: #00a8d6;
+}
+
+.snk-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.snk-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.snk-filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 48px;
+}
+
+.snk-chip {
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.snk-chip:hover {
+  border-color: #12b3d6;
+  color: #0e93b3;
+}
+
+.snk-chip.active {
+  background: #12b3d6;
+  border-color: #12b3d6;
+  color: #fff;
+}
+
+.snk-count {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.snk-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.snk-count-row .snk-count {
+  margin-top: 0;
+}
+
+.snk-sort-select {
+  width: auto;
+  min-width: 120px;
+}
+
+.snk-load-more {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0 8px;
+}
+
+.snk-load-more .btn {
+  padding: 10px 28px;
+}
+
+/* ---- 球鞋卡片网格 ---- */
+.snk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  margin-bottom: 32px;
+}
+
+.snk-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.snk-new-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  z-index: 1;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+.snk-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+}
+
+.snk-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.snk-brand {
+  font-size: 12px;
+  font-weight: 700;
+  color: #12b3d6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.snk-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #e24b4a;
+}
+
+.snk-name {
+  font-size: 19px;
+  margin: 0;
+}
+
+.snk-oneliner {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.snk-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.snk-tag {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(18, 179, 214, 0.1);
+  color: #0e93b3;
+  font-weight: 600;
+}
+
+.snk-tag.dim {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.snk-ratings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.snk-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.snk-rating-label {
+  font-size: 12px;
+  color: #6b7280;
+  width: 32px;
+}
+
+.snk-rating-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.snk-rating-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #12b3d6, #8be04b);
+}
+
+.snk-rating-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  width: 26px;
+  text-align: right;
+}
+
+.snk-btn-detail {
+  margin-top: auto;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(18, 179, 214, 0.4);
+  background: rgba(18, 179, 214, 0.06);
+  color: #0e93b3;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.snk-btn-detail:hover {
+  background: rgba(18, 179, 214, 0.14);
+}
+
+.snk-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+/* ---- AI 卡片 ---- */
+.snk-ai-card {
+  margin-bottom: 24px;
+}
+
+.snk-ai-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.snk-ai-head h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.snk-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.snk-key-ok {
+  font-size: 12px;
+  color: #1d9e75;
+  font-weight: 600;
+}
+
+.snk-btn-ghost {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #4b5563;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.snk-btn-ghost:hover {
+  border-color: #12b3d6;
+  color: #0e93b3;
+}
+
+.snk-key-panel {
+  background: #f5f9fc;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.snk-key-panel p {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+
+.snk-key-panel a {
+  color: #12b3d6;
+}
+
+.snk-key-guide {
+  background: #fff;
+  border: 1px solid #dce8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.snk-key-guide-title {
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.snk-key-guide ol {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #334;
+}
+
+.snk-key-guide li b {
+  color: #e63946;
+}
+
+.snk-key-guide .dim {
+  margin: 0;
+  font-size: 12px;
+}
+
+.snk-key-row {
+  display: flex;
+  gap: 10px;
+}
+
+.snk-key-row .snk-input {
+  flex: 1;
+}
+
+.snk-btn-primary {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(90deg, #12b3d6, #8be04b);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.snk-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.snk-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 用户画像 */
+.snk-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px;
+  background: #f5f9fc;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.snk-select {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fff;
+}
+
+.snk-profile-num {
+  width: 72px;
+  padding: 7px 10px;
+}
+
+/* 对话区 */
+.snk-chat {
+  max-height: 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px;
+  margin-bottom: 12px;
+}
+
+.snk-msg {
+  display: flex;
+}
+
+.snk-msg.user {
+  justify-content: flex-end;
+}
+
+.snk-msg-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.snk-msg.assistant .snk-msg-bubble {
+  background: #f3f4f6;
+  color: #1f2937;
+  border-top-left-radius: 4px;
+}
+
+.snk-msg.user .snk-msg-bubble {
+  background: linear-gradient(90deg, #12b3d6, #8be04b);
+  color: #fff;
+  border-top-right-radius: 4px;
+}
+
+.snk-typing {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.snk-error {
+  color: #e24b4a;
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+.snk-chat-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.snk-chat-input {
+  flex: 1;
+}
+
+.snk-disclaimer {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.6;
+  padding-bottom: 30px;
+}
+
+/* ---- 详情弹窗 ---- */
+.snk-modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.snk-modal {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 26px;
+}
+
+.snk-modal-close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.snk-modal-close:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.snk-modal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-right: 40px;
+}
+
+.snk-modal-head h2 {
+  margin: 4px 0 6px;
+  font-size: 24px;
+}
+
+.snk-modal-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.snk-price-now {
+  font-size: 32px;
+  font-weight: 800;
+  color: #e24b4a;
+}
+
+.snk-price-trend {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d9e75;
+}
+
+.snk-price-retail {
+  font-size: 12px;
+}
+
+.snk-section-title {
+  font-size: 16px;
+  margin: 18px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.snk-chart {
+  background: #fafcfd;
+  border-radius: 10px;
+  padding: 10px 6px 4px;
+}
+
+.snk-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.snk-spec {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #f5f9fc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.snk-spec .dim {
+  font-size: 12px;
+}
+
+.snk-modal-ratings {
+  max-width: 460px;
+}
+
+.snk-features {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.9;
+}
+
+.snk-modal-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.snk-btn-buy {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.snk-btn-buy.shihuo {
+  background: #e8452b;
+}
+
+.snk-btn-buy.dewu {
+  background: #00c8fa;
+}
+
+.snk-btn-buy:hover {
+  opacity: 0.9;
+}
+
+.dim {
+  color: #9ca3af;
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 720px) {
+  .snk-modal-head {
+    flex-direction: column;
+  }
+
+  .snk-modal-price {
+    align-items: flex-start;
+  }
+
+  .snk-specs {
+    grid-template-columns: 1fr;
+  }
+
+  .snk-search-row {
+    flex-direction: column;
+  }
+}

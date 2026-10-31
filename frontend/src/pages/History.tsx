@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getHistory, type HistoryRecord } from '../services/api'
+import { clearLocalResults, loadLocalResults } from '../analysis/pipeline'
 import './History.css'
+
+interface HistoryRecord {
+  task_id: string
+  created_at: string
+  action_type: string
+  athlete_name: string
+  overall_score: number
+  overall_level: string
+}
 
 export default function History() {
   const navigate = useNavigate()
@@ -9,12 +18,19 @@ export default function History() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getHistory()
-      .then((data) => {
-        setRecords(data)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    // 从 localStorage 读取本地分析历史
+    const results = loadLocalResults()
+    setRecords(
+      results.map((r) => ({
+        task_id: r.task_id,
+        created_at: r.created_at,
+        action_type: r.action_type,
+        athlete_name: `${r.athlete_info?.sport || ''}·${r.athlete_info?.level || ''}`,
+        overall_score: r.risk?.overall_score ?? 0,
+        overall_level: r.risk?.overall_level ?? '低风险',
+      })),
+    )
+    setLoading(false)
   }, [])
 
   const levelColor = (level: string) => {
@@ -23,11 +39,23 @@ export default function History() {
     return '#1d9e75'
   }
 
+  const handleClear = () => {
+    if (window.confirm('确定要清除全部历史记录吗？清除后无法恢复。')) {
+      clearLocalResults()
+      setRecords([])
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-header">
         <h1>历史记录</h1>
         <p>查看所有分析记录，追踪动作改善趋势</p>
+        {records.length > 0 && (
+          <button className="btn-history-clear" onClick={handleClear}>
+            清除历史
+          </button>
+        )}
       </div>
 
       {loading ? (

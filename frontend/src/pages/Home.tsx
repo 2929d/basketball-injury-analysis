@@ -6,13 +6,13 @@ const features = [
     icon: '🎯',
     title: '姿态识别',
     desc: '基于 MediaPipe Pose 实时检测人体 33 个关键点，精准还原运动姿态。',
-    color: '#00b4d8',
+    color: '#12b3d6',
   },
   {
     icon: '⚙️',
     title: '生物力学',
     desc: '计算关节角度、力矩、质心位移等生物力学指标，量化动作质量。',
-    color: '#06d6a0',
+    color: '#8be04b',
   },
   {
     icon: '⚠️',

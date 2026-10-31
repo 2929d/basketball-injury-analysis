@@ -3,11 +3,288 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>运动损伤风险评估系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="x5-fullscreen" content="true" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Injury Analysis" />
+    <meta name="application-name" content="Injury Analysis" />
+    <meta name="theme-color" content="#0b1622" />
+    <meta property="og:title" content="Injury Analysis · 运动损伤风险评估系统" />
+    <meta property="og:description" content="AI 姿态分析 · 实时骨骼识别 · 个性化防护方案" />
+    <title>Injury Analysis · 运动损伤风险评估系统</title>
+    <style>
+      /* ===== 启动封面（仿 ap-study hero；用 GIF 动图，规避视频自动播放被微信/WebView 拦截） ===== */
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: #0b1622;
+        overflow: hidden;
+        cursor: pointer;
+        transition: opacity 0.8s ease;
+      }
+      #splash.splash-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #splash-media {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 35%;
+        display: block;
+      }
+      #splash-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(11, 22, 34, 0.86) 0%,
+          rgba(11, 22, 34, 0.6) 42%,
+          rgba(11, 22, 34, 0.18) 100%
+        );
+      }
+      #splash-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-width: 760px;
+        padding: 0 8vw;
+        color: #fff;
+        z-index: 2;
+      }
+      #splash-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-bottom: 22px;
+        backdrop-filter: blur(6px);
+      }
+      #splash-title {
+        font-size: clamp(2.4rem, 6vw, 4.4rem);
+        font-weight: 900;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        margin: 0 0 18px;
+        text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+      }
+      #splash-title .accent {
+        color: #8be04b;
+      }
+      #splash-sub {
+        font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+        color: rgba(255, 255, 255, 0.94);
+        line-height: 1.9;
+        margin: 0 0 12px;
+        text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+        font-weight: 500;
+        max-width: 660px;
+      }
+      #splash-quote::before {
+        content: "\300C";
+        opacity: 0.55;
+        margin-right: 2px;
+      }
+      #splash-quote::after {
+        content: "\300D";
+        opacity: 0.55;
+        margin-left: 2px;
+      }
+      #splash-tagline {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.6px;
+        margin: 0 0 30px;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+      }
+      #splash-cta {
+        align-self: flex-start;
+        background: #8be04b;
+        color: #0b1622;
+        border: none;
+        padding: 14px 32px;
+        font-size: 1rem;
+        font-weight: 800;
+        border-radius: 40px;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        box-shadow: 0 8px 24px rgba(139, 224, 75, 0.35);
+      }
+      #splash-cta:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 12px 30px rgba(139, 224, 75, 0.45);
+      }
+      #splash-skip {
+        position: absolute;
+        right: 24px;
+        bottom: 22px;
+        z-index: 2;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+      }
+      @media (max-width: 768px) {
+        #splash-overlay {
+          background: linear-gradient(
+            180deg,
+            rgba(11, 22, 34, 0.5) 0%,
+            rgba(11, 22, 34, 0.45) 55%,
+            rgba(11, 22, 34, 0.82) 100%
+          );
+        }
+        #splash-content {
+          max-width: none;
+          padding: 0 24px 14vh;
+          justify-content: flex-end;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash">
+      <!-- 封面用 1.2MB 视频 + 84KB 海报图；原先是 15MB GIF，网络慢时会长时间空白像卡死 -->
+      <video
+        id="splash-media"
+        src="/cover.mp4"
+        poster="/cover-poster.jpg"
+        autoplay
+        muted
+        loop
+        playsinline
+        webkit-playsinline
+      ></video>
+      <div id="splash-overlay"></div>
+      <div id="splash-content">
+        <div id="splash-kicker">🏀 篮球运动损伤风险评估系统</div>
+        <h1 id="splash-title">
+          让每一次起跳<span class="accent">，都稳稳落地</span>
+        </h1>
+        <p id="splash-sub"><span id="splash-quote">正在为你取来今日份力量…</span></p>
+        <div id="splash-tagline">
+          <span id="splash-date"></span> · AI 姿态分析 · 实时骨骼识别 · 个性化防护方案
+        </div>
+        <button id="splash-cta">进入系统 →</button>
+      </div>
+      <div id="splash-skip">点击任意处 / 按任意键 进入系统</div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // ===== 每日更新的治愈 / 力量文案（按日期轮换，同一天固定，次日自动换新） =====
+      (function () {
+        var QUOTES = [
+          '把热情、好奇与爱，尽数浪费在这人间，只留一副空壳给死亡',
+          '你来人间一趟，要看看太阳，和心爱的人一起走在街上',
+          '人可以被毁灭，但不能被打败',
+          '愿你保持热爱，奔赴山海，也被这世界温柔以待',
+          '身体是灵魂的圣殿，请好好修缮它，别让它漏雨',
+          '所有的努力，都是在为运气做准备',
+          '你不必成为谁的太阳，做一盏自己的灯就很好',
+          '慢一点也没关系，只要还在往前走',
+          '世界很吵，但你可以选择安静地生长',
+          '把今天过好，就是对未来最好的交代',
+          '所谓自由，是不想做什么时，就能不做',
+          '生活明朗，万物可爱，人间值得，未来可期',
+          '别怕路长，只怕心老；别怕跌倒，只怕不再站起',
+          '此刻的每一分坚持，都会在未来某个转角与你重逢',
+          '与其抱怨黑暗，不如提灯前行',
+          '愿你有前进一寸的勇气，亦有后退一尺的从容',
+          '所有的坚持，都因为心里还燃着一点不肯熄灭的光',
+          '别急，好戏都在烟火里',
+          '热爱可抵岁月漫长，温柔可挡艰难时光',
+          '你走过的每一步都算数，流过的每滴汗都在为你铺路',
+          '跌倒不丢人，丢人的是再也不肯起身奔跑',
+          '身体会老去，少年气不会；保持热爱，永远热泪盈眶',
+          '每一个不曾起舞的日子，都是对生命的辜负',
+          '愿你历尽千帆，归来仍是少年；愿受过的伤，都长成铠甲',
+          '生活不是等暴风雨过去，而是学会在雨中起舞',
+          '把伤痕当勋章，把疲惫当勋章，把继续奔跑当勋章',
+          '你只管努力，剩下的交给时间，它从不亏待认真的人',
+          '温柔要有，但不是妥协；在安静中，不慌不忙地坚强',
+          '去爱，去受伤，去奔跑，去流汗，把这副身体用到极致',
+          '人这一生最值得炫耀的，是咬牙挺过来的那些时刻',
+          '别让昨天的雨，淋湿今天的你',
+          '愿你被很多人爱；如果没有，愿你在寂寞中学会宽容',
+          '每一次呼吸都是新的开始，每一次心跳都在为你加油',
+          '请保持你心里的光，因为你不知道谁会借它走出黑暗',
+          '我们终其一生，就是要摆脱他人的期待，找到真正的自己',
+          '好好吃饭，好好睡觉，好好爱自己，这是人生第一大事',
+          '走得慢没关系，方向对了，每一步都在靠近',
+          '世上只有一种英雄主义：认清生活真相后依然热爱它',
+          '愿你在冷铁卷刃前，得以窥见天光',
+          '我们都在阴沟里，但仍有人仰望星空'
+        ];
+        var d = new Date();
+        // 每次打开随机换一条，并避免与上一条重复
+        var last = -1;
+        try {
+          last = parseInt(window.sessionStorage.getItem('splash_quote_idx') || '-1', 10);
+        } catch (e) {}
+        var idx = Math.floor(Math.random() * QUOTES.length);
+        if (idx === last) {
+          idx = (idx + 1 + Math.floor(Math.random() * (QUOTES.length - 1))) % QUOTES.length;
+        }
+        try {
+          window.sessionStorage.setItem('splash_quote_idx', String(idx));
+        } catch (e) {}
+        var qEl = document.getElementById('splash-quote');
+        var dEl = document.getElementById('splash-date');
+        if (qEl) qEl.textContent = QUOTES[idx];
+        if (dEl) dEl.textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日 · 今日份力量';
+      })();
+
+      (function () {
+        var splash = document.getElementById('splash');
+        if (!splash) return;
+
+        // 封面视频兜底：自动播放被拦截或解码失败时，退回静态海报图（避免大片空白）
+        var media = document.getElementById('splash-media');
+        if (media) {
+          var fallback = function () {
+            if (media.dataset.fallback === '1') return;
+            media.dataset.fallback = '1';
+            var img = document.createElement('img');
+            img.id = 'splash-media-img';
+            img.alt = '封面';
+            img.src = media.getAttribute('poster') || '';
+            img.style.cssText =
+              'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;display:block;';
+            if (media.parentNode) media.parentNode.replaceChild(img, media);
+          };
+          media.addEventListener('error', fallback);
+          var p = media.play && media.play();
+          if (p && p.catch) p.catch(fallback);
+        }
+
+        function hide() {
+          splash.classList.add('splash-hidden');
+          setTimeout(function () {
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 850);
+        }
+        splash.addEventListener('click', hide);
+        document.getElementById('splash-cta').addEventListener('click', function (e) {
+          e.stopPropagation();
+          hide();
+        });
+        // 键盘任意键也可进入（满足"按下任意键才开始"）
+        document.addEventListener('keydown', hide);
+      })();
+    </script>
   </body>
 </html>

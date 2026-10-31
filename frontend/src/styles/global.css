@@ -1,33 +1,57 @@
-/* ===== 全局 CSS 变量 ===== */
+/* ============================================================
+   全局设计系统 —— 与封面(深蓝底 + 暖光 + 青柠绿)保持同一套视觉语言
+   ============================================================ */
 :root {
-  --color-primary: #00b4d8;
-  --color-primary-dark: #0096b7;
-  --color-accent: #06d6a0;
-  --color-accent-dark: #04b88a;
-  --color-warn: #ff6b35;
+  /* ---- 封面 DNA ---- */
+  --brand-deep: #0b1622;
+  --brand-deep-2: #16283e;
+  --brand-slate: #2a4258;
+  --brand-lime: #8be04b;
+  --brand-lime-dark: #5ec82f;
+  --brand-coral: #ff7a59;
+  --brand-gold: #ffd166;
 
-  --color-low: #06d6a0;
-  --color-mid: #ffd166;
-  --color-high: #ef476f;
+  /* ---- 功能色 ---- */
+  --color-primary: #12b3d6;
+  --color-primary-dark: #0e93b3;
+  --color-accent: #8be04b;
+  --color-accent-dark: #5ec82f;
+  --color-warn: #ff7a59;
 
-  --bg-page: #f5f7fa;
+  --color-low: #34d399;
+  --color-mid: #ffc94d;
+  --color-high: #f4557a;
+
+  /* ---- 中性色 ---- */
+  --bg-page: #f4f7fb;
   --bg-card: #ffffff;
-  --bg-soft: #eef2f7;
-  --text-main: #1f2a37;
-  --text-sub: #6b7280;
-  --text-muted: #9ca3af;
-  --border-color: #e5e9f0;
+  --bg-soft: #eef3f9;
+  --text-main: #16202e;
+  --text-sub: #5c6b7f;
+  --text-muted: #93a1b3;
+  --border-color: #e3eaf3;
+  --border-soft: #eef3f9;
 
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 14px 40px rgba(15, 23, 42, 0.12);
+  /* ---- 精致阴影(多层柔和, 营造渲染质感) ---- */
+  --shadow-xs: 0 1px 2px rgba(11, 22, 34, 0.04);
+  --shadow-sm: 0 1px 2px rgba(11, 22, 34, 0.04), 0 3px 10px rgba(11, 22, 34, 0.04);
+  --shadow-md: 0 2px 6px rgba(11, 22, 34, 0.05), 0 14px 32px rgba(11, 22, 34, 0.07);
+  --shadow-lg: 0 8px 20px rgba(11, 22, 34, 0.08), 0 28px 64px rgba(11, 22, 34, 0.1);
+  --shadow-glow-lime: 0 10px 30px rgba(139, 224, 75, 0.3);
+  --shadow-glow-blue: 0 10px 30px rgba(18, 179, 214, 0.28);
 
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  /* ---- 圆角 ---- */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
 
-  --grad-primary: linear-gradient(135deg, #00b4d8 0%, #06d6a0 100%);
-  --grad-warm: linear-gradient(135deg, #ff6b35 0%, #ffd166 100%);
+  /* ---- 渐变 ---- */
+  --grad-primary: linear-gradient(135deg, #12b3d6 0%, #8be04b 100%);
+  --grad-lime: linear-gradient(135deg, #a5ee6e 0%, #5ec82f 100%);
+  --grad-warm: linear-gradient(135deg, #ff7a59 0%, #ffd166 100%);
+  --grad-hero: linear-gradient(135deg, #0b1622 0%, #16283e 55%, #2a4258 100%);
+  --grad-deep: linear-gradient(160deg, #0b1622 0%, #1b3149 100%);
 }
 
 * {
@@ -44,11 +68,18 @@ body {
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', Roboto, Helvetica, Arial, sans-serif;
-  background: var(--bg-page);
+  /* 柔和光晕底纹, 呼应封面的渲染感 */
+  background-color: var(--bg-page);
+  background-image:
+    radial-gradient(1100px 560px at 10% -10%, rgba(139, 224, 75, 0.09), transparent 62%),
+    radial-gradient(900px 520px at 94% -4%, rgba(18, 179, 214, 0.09), transparent 60%),
+    radial-gradient(800px 500px at 50% 108%, rgba(255, 122, 89, 0.05), transparent 62%);
+  background-attachment: fixed;
   color: var(--text-main);
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -76,7 +107,7 @@ textarea {
   font-size: inherit;
 }
 
-/* ===== 通用按钮 ===== */
+/* ================= 通用按钮 ================= */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -86,50 +117,99 @@ textarea {
   border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.22s ease,
+    background 0.22s ease, color 0.22s ease;
   white-space: nowrap;
 }
 .btn-primary {
   background: var(--grad-primary);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(0, 180, 216, 0.32);
+  box-shadow: var(--shadow-glow-blue);
 }
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0, 180, 216, 0.42);
+  box-shadow: 0 14px 34px rgba(18, 179, 214, 0.4);
+}
+.btn-accent {
+  background: var(--grad-lime);
+  color: #0b1622;
+  box-shadow: var(--shadow-glow-lime);
+}
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px rgba(139, 224, 75, 0.45);
 }
 .btn-outline {
-  background: #fff;
-  color: var(--color-primary);
-  border: 1.5px solid var(--color-primary);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-primary-dark);
+  border: 1.5px solid rgba(18, 179, 214, 0.35);
+  box-shadow: var(--shadow-xs);
 }
 .btn-outline:hover {
   background: var(--color-primary);
   color: #fff;
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
 }
 .btn-ghost {
   background: var(--bg-soft);
-  color: var(--text-main);
+  color: var(--text-sub);
 }
 .btn-ghost:hover {
-  background: #e2e8f0;
+  background: #e2eaf4;
+  color: var(--text-main);
 }
 .btn-lg {
-  padding: 14px 38px;
+  padding: 15px 40px;
   font-size: 17px;
+  border-radius: 14px;
 }
 .btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
+  box-shadow: none !important;
 }
 
-/* ===== 通用卡片 ===== */
+/* ================= 通用卡片(渲染质感) ================= */
 .card {
+  position: relative;
   background: var(--bg-card);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   padding: 24px;
+  border: 1px solid rgba(227, 234, 243, 0.8);
+  transition: box-shadow 0.28s ease, transform 0.28s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 顶部渐变描边(渲染感细节) */
+.card-accent {
+  overflow: hidden;
+}
+.card-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--grad-primary);
+  opacity: 0.9;
+}
+
+/* 玻璃拟态卡片 —— 用于深色区域上的浮层 */
+.card-glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
 }
 
 .section-title {
@@ -140,16 +220,17 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
+  letter-spacing: 0.2px;
 }
 .section-title::before {
   content: '';
   width: 4px;
   height: 18px;
   background: var(--grad-primary);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
-/* ===== 网格 ===== */
+/* ================= 网格 ================= */
 .grid {
   display: grid;
   gap: 20px;
@@ -178,29 +259,30 @@ textarea {
   }
 }
 
-/* ===== 标签 ===== */
+/* ================= 标签/徽章 ================= */
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 3px 12px;
+  padding: 4px 13px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
+  letter-spacing: 0.2px;
 }
 .tag-low {
-  background: rgba(6, 214, 160, 0.12);
-  color: #04b88a;
+  background: rgba(52, 211, 153, 0.14);
+  color: #0f9d6e;
 }
 .tag-mid {
-  background: rgba(255, 209, 102, 0.18);
-  color: #c99700;
+  background: rgba(255, 201, 77, 0.2);
+  color: #b98400;
 }
 .tag-high {
-  background: rgba(239, 71, 111, 0.12);
+  background: rgba(244, 85, 122, 0.14);
   color: #d63a63;
 }
 
-/* ===== 页面容器 ===== */
+/* ================= 页面容器 ================= */
 .page {
   max-width: 1280px;
   margin: 0 auto;
@@ -208,21 +290,38 @@ textarea {
   width: 100%;
 }
 
+/* 页面标题: 渐变文字 + 渐变竖条, 呼应封面的渲染感 */
 .page-header {
+  position: relative;
   margin-bottom: 28px;
+  padding-left: 16px;
+}
+.page-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 6px;
+  width: 4px;
+  border-radius: 3px;
+  background: var(--grad-primary);
 }
 .page-header h1 {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--text-main);
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  background: linear-gradient(100deg, #16202e 0%, #0e93b3 52%, #4aa825 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .page-header p {
   color: var(--text-sub);
-  margin-top: 6px;
+  margin-top: 7px;
   font-size: 15px;
 }
 
-/* ===== 加载动画 ===== */
+/* ================= 加载动画 ================= */
 .spinner {
   width: 18px;
   height: 18px;
@@ -232,7 +331,7 @@ textarea {
   animation: spin 0.8s linear infinite;
 }
 .spinner-dark {
-  border-color: rgba(0, 180, 216, 0.25);
+  border-color: rgba(18, 179, 214, 0.22);
   border-top-color: var(--color-primary);
 }
 @keyframes spin {
@@ -241,22 +340,23 @@ textarea {
   }
 }
 
-/* ===== 进度条 ===== */
+/* ================= 进度条 ================= */
 .progress-track {
   width: 100%;
   height: 10px;
   background: var(--bg-soft);
   border-radius: 999px;
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(11, 22, 34, 0.06);
 }
 .progress-fill {
   height: 100%;
   background: var(--grad-primary);
   border-radius: 999px;
-  transition: width 0.4s ease;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===== 表单 ===== */
+/* ================= 表单 ================= */
 .field {
   margin-bottom: 18px;
 }
@@ -276,7 +376,7 @@ textarea {
 .select,
 .textarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-sm);
   background: #fff;
@@ -288,9 +388,60 @@ textarea {
 .textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+  box-shadow: 0 0 0 4px rgba(18, 179, 214, 0.13);
 }
 .textarea {
   resize: vertical;
   min-height: 84px;
+}
+
+/* ================= 渲染感装饰件 ================= */
+/* 深色 hero 区块(呼应封面) */
+.hero-band {
+  position: relative;
+  overflow: hidden;
+  background: var(--grad-hero);
+  border-radius: var(--radius-xl);
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+}
+/* hero 内的柔光斑 */
+.hero-band::after {
+  content: '';
+  position: absolute;
+  inset: auto -10% -60% 60%;
+  height: 220%;
+  background: radial-gradient(circle at 30% 30%, rgba(139, 224, 75, 0.28), transparent 62%),
+    radial-gradient(circle at 75% 60%, rgba(255, 122, 89, 0.2), transparent 60%);
+  pointer-events: none;
+}
+
+/* 细腻分隔线 */
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+  border: 0;
+  margin: 18px 0;
+}
+
+/* 数字强调(用于评分/指标) */
+.metric-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* 入场动效 */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

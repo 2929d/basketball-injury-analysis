@@ -7,6 +7,28 @@
   margin-bottom: 16px;
 }
 
+.btn-history-clear {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #e24b4a;
+  background: #fff;
+  border: 1px solid #f3c2c1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-history-clear:hover {
+  background: #fdf3f2;
+  border-color: #e24b4a;
+}
+/* 本页标题区作为清除按钮的定位上下文 */
+.page-header {
+  position: relative;
+}
+
 .history-trend {
   margin-bottom: 16px;
 }

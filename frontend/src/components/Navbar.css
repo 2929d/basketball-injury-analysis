@@ -1,10 +1,13 @@
+/* ================= 顶部导航 —— 深色玻璃质感, 与封面同一套深蓝视觉 ================= */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: saturate(180%) blur(12px);
-  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(11, 22, 34, 0.97) 0%, rgba(22, 40, 62, 0.95) 100%);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 28px rgba(11, 22, 34, 0.16);
 }
 .navbar-inner {
   max-width: 1280px;
@@ -14,47 +17,80 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
 }
+
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
+  flex-shrink: 0;
 }
 .brand-logo {
   display: inline-flex;
+  filter: drop-shadow(0 3px 10px rgba(139, 224, 75, 0.32));
 }
 .brand-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.15;
+  line-height: 1.18;
 }
 .brand-text strong {
   font-size: 16px;
-  color: var(--text-main);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.2px;
 }
 .brand-text small {
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
 }
+
 .nav-links {
   display: flex;
   gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.nav-links::-webkit-scrollbar {
+  display: none;
+}
+
 .nav-link {
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-sub);
-  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  transition: color 0.22s ease, background 0.22s ease, transform 0.22s ease;
 }
 .nav-link:hover {
-  color: var(--color-primary);
-  background: rgba(0, 180, 216, 0.08);
-}
-.nav-link.active {
   color: #fff;
-  background: var(--grad-primary);
-  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 激活项: 与封面 CTA 同款青柠绿 */
+.nav-link.active {
+  color: #0b1622;
+  font-weight: 700;
+  background: var(--grad-lime);
+  box-shadow: var(--shadow-glow-lime);
+}
+
+@media (max-width: 720px) {
+  .navbar-inner {
+    padding: 0 16px;
+  }
+  .brand-text small {
+    display: none;
+  }
+  .brand-text strong {
+    font-size: 15px;
+  }
+  .nav-link {
+    padding: 7px 12px;
+    font-size: 13px;
+  }
 }

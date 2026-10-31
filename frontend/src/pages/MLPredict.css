@@ -244,3 +244,9 @@
   color: #9ca3af;
   margin-top: 8px;
 }
+.ml-local-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+}

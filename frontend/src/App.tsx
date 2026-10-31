@@ -7,12 +7,13 @@ import Analysis from './pages/Analysis'
 import Report from './pages/Report'
 import History from './pages/History'
 import About from './pages/About'
-import Methodology from './pages/Methodology'
+import Sneakers from './pages/Sneakers'
 import MLPredict from './pages/MLPredict'
 
 function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/athlete" element={<Athlete />} />
@@ -21,10 +22,11 @@ function App() {
         <Route path="/report/:taskId" element={<Report />} />
         <Route path="/history" element={<History />} />
         <Route path="/about" element={<About />} />
-        <Route path="/methodology" element={<Methodology />} />
+        <Route path="/sneakers" element={<Sneakers />} />
         <Route path="/ml-predict" element={<MLPredict />} />
       </Route>
     </Routes>
+    </>
   )
 }
 

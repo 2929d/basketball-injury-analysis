@@ -1,25 +1,6 @@
 import { useState } from 'react'
-import axios from 'axios'
+import { predictInjuryRisk, type PredictResult } from '../analysis/mlModel'
 import './MLPredict.css'
-
-interface Contribution {
-  feature: string
-  value: number
-  contribution: number
-  direction: string
-  importance_pct: number
-}
-
-interface PredictResult {
-  probability: number
-  risk_level: string
-  model_type: string
-  accuracy: number
-  paper_baseline: number
-  label_definition: string
-  top_risk_factors: Contribution[]
-  honesty_note: string
-}
 
 // 大白话字段配置
 const FIELDS = [
@@ -71,13 +52,14 @@ export default function MLPredict() {
   const [result, setResult] = useState<PredictResult | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const predict = async (data: typeof input) => {
+  const predict = (data: typeof input) => {
     setLoading(true)
+    // 模型已内嵌到前端(逻辑回归), 浏览器本地推理, 无需后端, 公网静态版可用
     try {
-      const res = await axios.post('/api/v1/ml/predict', data)
-      setResult(res.data)
+      const res = predictInjuryRisk(data)
+      setResult(res)
     } catch {
-      alert('预测失败，请确认后端已启动')
+      alert('预测失败，请检查输入数值')
     } finally {
       setLoading(false)
     }
@@ -144,6 +126,7 @@ export default function MLPredict() {
           <button className="btn btn-primary btn-lg ml-predict-btn" onClick={() => predict(input)} disabled={loading}>
             {loading ? 'AI预测中...' : '🔮 让AI预测一下'}
           </button>
+          <p className="ml-local-note">模型已内置于网页中，浏览器本地计算，无需服务器</p>
         </div>
 
         {/* 结果区 */}

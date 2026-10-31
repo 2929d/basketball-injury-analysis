@@ -203,6 +203,34 @@ export interface ProblemMoment {
   clip_index: number
 }
 
+/** 逐帧特征时间线点(报告页"骨骼叠加分析视频"联动显示) */
+export interface FrameTimelinePoint {
+  frame: number
+  time: number
+  knee_flexion: number
+  knee_valgus: number
+  trunk_lean: number
+  trunk_lateral: number
+  com_y: number
+}
+
+/** 单帧姿态关键点(命名关键点, 用于报告页骨骼叠加回放) */
+export interface PoseKeypoint {
+  name: string
+  x: number
+  y: number
+  z: number
+  visibility: number
+}
+
+export interface PoseFrameStored {
+  frame_index: number
+  timestamp_ms: number
+  keypoints: Record<string, PoseKeypoint>
+  image_width: number
+  image_height: number
+}
+
 export interface AnalysisResult {
   task_id: string
   athlete_info: {
@@ -231,6 +259,10 @@ export interface AnalysisResult {
   features: Features | null
   risk: Risk | null
   problem_moments?: ProblemMoment[]
+  /** 浏览器版附加: 全部姿态帧(报告页骨骼叠加回放用) */
+  pose_frames?: PoseFrameStored[]
+  /** 浏览器版附加: 逐帧特征时间线 */
+  timeline?: FrameTimelinePoint[]
   action_validity?: {
     score: number
     is_valid: boolean

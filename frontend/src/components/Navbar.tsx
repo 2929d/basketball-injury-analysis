@@ -6,7 +6,7 @@ const navs = [
   { to: '/athlete', label: '开始评估' },
   { to: '/ml-predict', label: 'ML预测' },
   { to: '/history', label: '历史记录' },
-  { to: '/methodology', label: '系统方法论' },
+  { to: '/sneakers', label: '球鞋推荐' },
   { to: '/about', label: '关于' },
 ]
 
@@ -19,8 +19,8 @@ export default function Navbar() {
             <svg viewBox="0 0 64 64" width="30" height="30">
               <defs>
                 <linearGradient id="navg" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stopColor="#00b4d8" />
-                  <stop offset="1" stopColor="#06d6a0" />
+                  <stop offset="0" stopColor="#12b3d6" />
+                  <stop offset="1" stopColor="#8be04b" />
                 </linearGradient>
               </defs>
               <circle cx="32" cy="32" r="30" fill="url(#navg)" />

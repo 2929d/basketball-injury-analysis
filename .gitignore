@@ -10,8 +10,15 @@ backend/data/results/
 backend/data/videos/
 logs/
 
-# 构建产物
+# 构建产物 (docs/ 是 GitHub Pages 发布目录, 需要提交)
 frontend/dist/
+frontend/dist-ghp/
+frontend/dist-v2/
+
+# 大体积静态资源: 仅本地开发/重新构建用, 线上版本已打进 docs/
+frontend/public/wasm/
+frontend/public/models/
+frontend/public/cover.gif
 
 # 工作目录
 .workbuddy/
